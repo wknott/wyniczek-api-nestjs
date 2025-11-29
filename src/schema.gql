@@ -1,0 +1,83 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type PointCategory {
+  id: String!
+  name: String!
+  gameId: String!
+}
+
+type Game {
+  id: String!
+  name: String!
+  minPlayers: Int!
+  maxPlayers: Int!
+  bggId: Int
+  imgUrl: String
+  thumbnailUrl: String
+  userId: String!
+  pointCategories: [PointCategory!]
+}
+
+type Player {
+  id: String!
+  name: String!
+  userId: String!
+}
+
+type Point {
+  id: String!
+  scoreId: String!
+  pointCategoryId: String!
+  value: Int
+  pointCategory: PointCategory!
+}
+
+type Score {
+  id: String!
+  resultId: String!
+  playerId: String!
+  player: Player
+  points: [Point!]
+}
+
+type Result {
+  id: String!
+  gameId: String!
+  game: Game!
+  createdAt: DateTime!
+  playingTime: Int
+  userId: String!
+  scores: [Score!]
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Query {
+  games: [Game!]!
+  game(id: String!): Game
+  players: [Player!]!
+  player(id: String!): Player
+  results: [Result!]!
+  result(id: String!): Result
+  latestResultByGameName(gameName: String!): Result
+}
+
+type Mutation {
+  createGame(createGameInput: CreateGameInput!): Game!
+}
+
+input CreateGameInput {
+  name: String!
+  minPlayers: Int!
+  maxPlayers: Int!
+  bggId: Int
+  imgUrl: String
+  thumbnailUrl: String
+  userId: String!
+  pointCategoryNames: [String!]
+}
