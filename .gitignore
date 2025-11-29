@@ -49,3 +49,6 @@ prisma/dev.db-journal
 .cache/
 temp/
 tmp/
+
+# Seed data
+prisma/*.json
