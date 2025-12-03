@@ -1,6 +1,6 @@
-import { Resolver, Query, Args, ResolveField, Parent } from '@nestjs/graphql';
+import { Resolver, Query, Args, ResolveField, Parent, Int } from '@nestjs/graphql';
 import { ResultsService } from './results.service';
-import { Result } from './entities/result.entity';
+import { Result, PaginatedResults } from './entities/result.entity';
 import { Game } from '../games/entities/game.entity';
 import { Score } from './entities/score.entity';
 import { Player } from '../players/entities/player.entity';
@@ -12,9 +12,12 @@ import { PointCategory } from '../games/entities/game.entity';
 export class ResultsResolver {
     constructor(private readonly resultsService: ResultsService) { }
 
-    @Query(() => [Result], { name: 'results' })
-    findAll() {
-        return this.resultsService.findAll();
+    @Query(() => PaginatedResults, { name: 'results' })
+    findAll(
+        @Args('skip', { type: () => Int, nullable: true, defaultValue: 0 }) skip: number,
+        @Args('take', { type: () => Int, nullable: true, defaultValue: 10 }) take: number,
+    ) {
+        return this.resultsService.findAll(skip, take);
     }
 
     @Query(() => Result, { name: 'result', nullable: true })

@@ -26,3 +26,12 @@ export class Result {
     @Field(() => [Score], { nullable: true })
     scores?: Score[];
 }
+
+@ObjectType()
+export class PaginatedResults {
+    @Field(() => [Result])
+    items: Result[];
+
+    @Field(() => Int)
+    total: number;
+}

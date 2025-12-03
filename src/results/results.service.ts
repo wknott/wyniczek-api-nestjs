@@ -13,8 +13,17 @@ import { PointCategory } from '../games/entities/game.entity';
 export class ResultsService {
     constructor(private prisma: PrismaService) { }
 
-    async findAll(): Promise<Result[]> {
-        return this.prisma.result.findMany();
+    async findAll(skip: number = 0, take: number = 10): Promise<{ items: Result[]; total: number }> {
+        const [items, total] = await Promise.all([
+            this.prisma.result.findMany({
+                skip,
+                take,
+                orderBy: { createdAt: 'desc' },
+            }),
+            this.prisma.result.count(),
+        ]);
+
+        return { items, total };
     }
 
     async findOne(id: string): Promise<Result | null> {
