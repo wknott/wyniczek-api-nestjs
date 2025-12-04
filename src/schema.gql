@@ -18,6 +18,18 @@ type Game {
   thumbnailUrl: String
   userId: String!
   pointCategories: [PointCategory!]
+  lastPlayedAt: DateTime
+  latestResult: Result
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type PaginatedGames {
+  items: [Game!]!
+  total: Int!
 }
 
 type Player {
@@ -52,24 +64,25 @@ type Result {
   scores: [Score!]
 }
 
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
 type PaginatedResults {
   items: [Result!]!
   total: Int!
 }
 
 type Query {
-  games: [Game!]!
+  games(skip: Int = 0, take: Int = 10, sortBy: GameSortBy = POPULARITY): PaginatedGames!
   game(id: String!): Game
   players: [Player!]!
   player(id: String!): Player
   results(skip: Int = 0, take: Int = 10): PaginatedResults!
   result(id: String!): Result
   latestResultByGameName(gameName: String!): Result
+}
+
+enum GameSortBy {
+  POPULARITY
+  LAST_PLAYED
+  ALPHABETICAL
 }
 
 type Mutation {

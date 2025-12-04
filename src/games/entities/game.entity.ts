@@ -1,4 +1,14 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { ObjectType, Field, Int, registerEnumType } from '@nestjs/graphql';
+
+export enum GameSortBy {
+    POPULARITY = 'POPULARITY',
+    LAST_PLAYED = 'LAST_PLAYED',
+    ALPHABETICAL = 'ALPHABETICAL',
+}
+
+registerEnumType(GameSortBy, {
+    name: 'GameSortBy',
+});
 
 @ObjectType()
 export class PointCategory {
@@ -40,4 +50,16 @@ export class Game {
 
     @Field(() => [PointCategory], { nullable: true })
     pointCategories?: PointCategory[];
+
+    @Field(() => Date, { nullable: true })
+    lastPlayedAt?: Date | null;
+}
+
+@ObjectType()
+export class PaginatedGames {
+    @Field(() => [Game])
+    items: Game[];
+
+    @Field(() => Int)
+    total: number;
 }

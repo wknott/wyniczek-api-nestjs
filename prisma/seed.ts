@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
-const players = require("./players.json");
-const games = require("./games.json");
-const results = require("./results.json");
+const players = require("./users_export_20251204_1601.json");
+const games = require("./games_export_20251204_1601.json");
+const results = require("./results_export_20251204_1601.json");
 
 const prisma = new PrismaClient();
 
