@@ -16,4 +16,16 @@ export class PlayersService {
             where: { id },
         });
     }
+
+    async create(data: { name: string; userId: string }): Promise<Player> {
+        return this.prisma.player.create({
+            data,
+        });
+    }
+
+    async remove(id: string): Promise<Player> {
+        return this.prisma.player.delete({
+            where: { id },
+        });
+    }
 }

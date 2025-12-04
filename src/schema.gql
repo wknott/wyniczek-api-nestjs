@@ -87,6 +87,8 @@ enum GameSortBy {
 
 type Mutation {
   createGame(createGameInput: CreateGameInput!): Game!
+  createPlayer(createPlayerInput: CreatePlayerInput!): Player!
+  removePlayer(id: String!): Player!
 }
 
 input CreateGameInput {
@@ -98,4 +100,9 @@ input CreateGameInput {
   thumbnailUrl: String
   userId: String!
   pointCategoryNames: [String!]
+}
+
+input CreatePlayerInput {
+  name: String!
+  userId: String!
 }
