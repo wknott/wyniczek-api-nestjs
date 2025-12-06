@@ -53,7 +53,7 @@ model Result {
 
 model Score {
   id       String  @id @default(cuid())
-  result   Result  @relation(fields: [resultId], references: [id])
+  result   Result  @relation(fields: [resultId], references: [id], onDelete: Cascade)
   resultId String
   player   Player  @relation(fields: [playerId], references: [id])
   playerId String
@@ -62,7 +62,7 @@ model Score {
 
 model Point {
   id              String        @id @default(cuid())
-  score           Score         @relation(fields: [scoreId], references: [id])
+  score           Score         @relation(fields: [scoreId], references: [id], onDelete: Cascade)
   scoreId         String
   pointCategory   PointCategory @relation(fields: [pointCategoryId], references: [id])
   pointCategoryId String

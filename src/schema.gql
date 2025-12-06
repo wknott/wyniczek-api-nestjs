@@ -116,6 +116,9 @@ type Mutation {
   syncAllGamesWithBgg: [Game!]!
   createPlayer(createPlayerInput: CreatePlayerInput!): Player!
   removePlayer(id: String!): Player!
+  createResult(createResultInput: CreateResultInput!): Result!
+  updateResult(updateResultInput: UpdateResultInput!): Result!
+  removeResult(id: String!): Result!
 }
 
 input CreateGameInput {
@@ -128,4 +131,29 @@ input CreateGameInput {
 input CreatePlayerInput {
   name: String!
   userId: String!
+}
+
+input CreateResultInput {
+  gameId: String!
+  userId: String!
+  playingTime: Int
+  scores: [CreateScoreInput!]!
+}
+
+input CreateScoreInput {
+  playerId: String!
+  points: [CreatePointInput]
+}
+
+input CreatePointInput {
+  pointCategoryId: String!
+  value: Int
+}
+
+input UpdateResultInput {
+  gameId: String
+  userId: String
+  playingTime: Int
+  scores: [CreateScoreInput!]
+  id: String!
 }

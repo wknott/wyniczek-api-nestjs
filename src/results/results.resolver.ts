@@ -1,4 +1,4 @@
-import { Resolver, Query, Args, ResolveField, Parent, Int } from '@nestjs/graphql';
+import { Resolver, Query, Args, Mutation, ResolveField, Parent, Int } from '@nestjs/graphql';
 import { ResultsService } from './results.service';
 import { Result, PaginatedResults } from './entities/result.entity';
 import { Game } from '../games/entities/game.entity';
@@ -6,11 +6,27 @@ import { Score } from './entities/score.entity';
 import { Player } from '../players/entities/player.entity';
 import { Point } from './entities/point.entity';
 import { PointCategory } from '../games/entities/game.entity';
-
+import { CreateResultInput } from './dto/create-result.input';
+import { UpdateResultInput } from './dto/update-result.input';
 
 @Resolver(() => Result)
 export class ResultsResolver {
     constructor(private readonly resultsService: ResultsService) { }
+
+    @Mutation(() => Result)
+    createResult(@Args('createResultInput') createResultInput: CreateResultInput) {
+        return this.resultsService.create(createResultInput);
+    }
+
+    @Mutation(() => Result)
+    updateResult(@Args('updateResultInput') updateResultInput: UpdateResultInput) {
+        return this.resultsService.update(updateResultInput.id, updateResultInput);
+    }
+
+    @Mutation(() => Result)
+    removeResult(@Args('id', { type: () => String }) id: string) {
+        return this.resultsService.remove(id);
+    }
 
     @Query(() => PaginatedResults, { name: 'results' })
     findAll(
