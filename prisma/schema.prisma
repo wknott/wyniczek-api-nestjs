@@ -23,6 +23,8 @@ model Game {
   maxPlayers      Int
   pointCategories PointCategory[]
   bggId           Int?
+  bggRank         Int?
+  bggWeight       Float?
   imgUrl          String?
   thumbnailUrl    String?
   results         Result[]

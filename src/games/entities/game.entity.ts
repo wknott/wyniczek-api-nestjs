@@ -1,4 +1,4 @@
-import { ObjectType, Field, Int, registerEnumType } from '@nestjs/graphql';
+import { ObjectType, Field, Int, Float, registerEnumType } from '@nestjs/graphql';
 
 export enum GameSortBy {
     POPULARITY = 'POPULARITY',
@@ -38,6 +38,12 @@ export class Game {
 
     @Field(() => Int, { nullable: true })
     bggId?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    bggRank?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    bggWeight?: number | null;
 
     @Field(() => String, { nullable: true })
     imgUrl?: string | null;

@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { BggService } from '../bgg/bgg.service';
 
 import { Game, GameSortBy } from './entities/game.entity';
 import { CreateGameInput } from './dto/create-game.input';
 
 @Injectable()
 export class GamesService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private bggService: BggService,
+    ) { }
 
     async findAll(skip: number = 0, take: number = 10, sortBy: GameSortBy = GameSortBy.POPULARITY): Promise<{ items: Game[]; total: number }> {
         const total = await this.prisma.game.count();
@@ -98,5 +102,50 @@ export class GamesService {
                 pointCategories: true,
             },
         });
+    }
+
+    async syncGameWithBgg(gameId: string): Promise<Game> {
+        const game = await this.prisma.game.findUnique({ where: { id: gameId } });
+        if (!game) {
+            throw new Error('Game not found');
+        }
+
+        if (!game.bggId) {
+            throw new Error('Game does not have a BGG ID');
+        }
+
+        const stats = await this.bggService.getGameStats(game.bggId.toString());
+
+        return this.prisma.game.update({
+            where: { id: gameId },
+            data: {
+                bggRank: stats.bggRank,
+                bggWeight: stats.weight,
+            },
+            include: {
+                pointCategories: true,
+            },
+        });
+    }
+
+    async syncAllGamesWithBgg(): Promise<Game[]> {
+        const games = await this.prisma.game.findMany({
+            where: {
+                bggId: { not: null }
+            }
+        });
+
+        const updatedGames: Game[] = [];
+
+        for (const game of games) {
+            try {
+                const updated = await this.syncGameWithBgg(game.id);
+                updatedGames.push(updated);
+            } catch (e) {
+                console.error(`Failed to sync game ${game.id} (${game.name}):`, e);
+            }
+        }
+
+        return updatedGames;
     }
 }

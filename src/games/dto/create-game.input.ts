@@ -1,4 +1,4 @@
-import { InputType, Field, Int } from '@nestjs/graphql';
+import { InputType, Field, Int, Float } from '@nestjs/graphql';
 
 @InputType()
 export class CreateGameInput {
@@ -13,6 +13,12 @@ export class CreateGameInput {
 
     @Field(() => Int, { nullable: true })
     bggId?: number;
+
+    @Field(() => Int, { nullable: true })
+    bggRank?: number;
+
+    @Field(() => Float, { nullable: true })
+    bggWeight?: number;
 
     @Field(() => String, { nullable: true })
     imgUrl?: string;

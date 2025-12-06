@@ -37,4 +37,14 @@ export class GamesResolver {
         const latestResult = await this.gamesService.findLatestResult(game.id);
         return latestResult?.createdAt ?? null;
     }
+
+    @Mutation(() => Game)
+    syncGameWithBgg(@Args('id', { type: () => String }) id: string) {
+        return this.gamesService.syncGameWithBgg(id);
+    }
+
+    @Mutation(() => [Game])
+    syncAllGamesWithBgg() {
+        return this.gamesService.syncAllGamesWithBgg();
+    }
 }

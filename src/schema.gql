@@ -14,6 +14,8 @@ type Game {
   minPlayers: Int!
   maxPlayers: Int!
   bggId: Int
+  bggRank: Int
+  bggWeight: Float
   imgUrl: String
   thumbnailUrl: String
   userId: String!
@@ -92,14 +94,14 @@ type BggGameStats {
 type Query {
   games(skip: Int = 0, take: Int = 10, sortBy: GameSortBy = POPULARITY): PaginatedGames!
   game(id: String!): Game
+  searchBggGames(query: String!): [BggGameSearchResult!]!
+  getBggGameDetails(bggId: String!): BggGameDetails!
+  getBggGameStats(bggId: String!): BggGameStats!
   players: [Player!]!
   player(id: String!): Player
   results(skip: Int = 0, take: Int = 10): PaginatedResults!
   result(id: String!): Result
   latestResultByGameName(gameName: String!): Result
-  searchBggGames(query: String!): [BggGameSearchResult!]!
-  getBggGameDetails(bggId: String!): BggGameDetails!
-  getBggGameStats(bggId: String!): BggGameStats!
 }
 
 enum GameSortBy {
@@ -110,6 +112,8 @@ enum GameSortBy {
 
 type Mutation {
   createGame(createGameInput: CreateGameInput!): Game!
+  syncGameWithBgg(id: String!): Game!
+  syncAllGamesWithBgg: [Game!]!
   createPlayer(createPlayerInput: CreatePlayerInput!): Player!
   removePlayer(id: String!): Player!
 }
@@ -119,6 +123,8 @@ input CreateGameInput {
   minPlayers: Int!
   maxPlayers: Int!
   bggId: Int
+  bggRank: Int
+  bggWeight: Float
   imgUrl: String
   thumbnailUrl: String
   userId: String!
