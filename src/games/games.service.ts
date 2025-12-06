@@ -88,10 +88,43 @@ export class GamesService {
 
     async create(createGameInput: CreateGameInput): Promise<Game> {
         const { pointCategoryNames, ...gameData } = createGameInput;
+        let additionalData: {
+            bggRank?: number;
+            bggWeight?: number;
+            imgUrl?: string;
+            thumbnailUrl?: string;
+            minPlayers: number;
+            maxPlayers: number;
+        } = {
+            minPlayers: 1,
+            maxPlayers: 4
+        };
+
+        if (gameData.bggId) {
+            try {
+                const [details, stats] = await Promise.all([
+                    this.bggService.getGameDetails(gameData.bggId.toString()),
+                    this.bggService.getGameStats(gameData.bggId.toString())
+                ]);
+
+                additionalData = {
+                    ...additionalData,
+                    bggRank: stats.bggRank,
+                    bggWeight: stats.weight,
+                    imgUrl: details.img,
+                    thumbnailUrl: details.thumbnail,
+                    minPlayers: details.minPlayers ?? additionalData.minPlayers,
+                    maxPlayers: details.maxPlayers ?? additionalData.maxPlayers,
+                };
+            } catch (error) {
+                console.error(`Failed to fetch BGG data for ${gameData.name}:`, error);
+            }
+        }
 
         return this.prisma.game.create({
             data: {
                 ...gameData,
+                ...additionalData,
                 pointCategories: {
                     create: pointCategoryNames && pointCategoryNames.length > 0
                         ? pointCategoryNames.map(name => ({ name }))

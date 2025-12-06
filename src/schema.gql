@@ -120,13 +120,7 @@ type Mutation {
 
 input CreateGameInput {
   name: String!
-  minPlayers: Int!
-  maxPlayers: Int!
   bggId: Int
-  bggRank: Int
-  bggWeight: Float
-  imgUrl: String
-  thumbnailUrl: String
   userId: String!
   pointCategoryNames: [String!]
 }
