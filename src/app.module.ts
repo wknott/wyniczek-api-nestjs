@@ -7,6 +7,7 @@ import { GamesModule } from './games/games.module';
 import { PlayersModule } from './players/players.module';
 import { ResultsModule } from './results/results.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { BggModule } from './bgg/bgg.module';
 
 
 @Module({
@@ -20,6 +21,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PlayersModule,
     ResultsModule,
     PrismaModule,
+    BggModule,
 
   ],
 })

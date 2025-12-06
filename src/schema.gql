@@ -69,6 +69,26 @@ type PaginatedResults {
   total: Int!
 }
 
+type BggGameSearchResult {
+  bggId: ID!
+  name: String!
+  yearPublished: Int
+}
+
+type BggGameDetails {
+  bggId: ID!
+  names: [String!]!
+  img: String
+  thumbnail: String
+  minPlayers: Int!
+  maxPlayers: Int!
+}
+
+type BggGameStats {
+  bggRank: Int!
+  weight: Float!
+}
+
 type Query {
   games(skip: Int = 0, take: Int = 10, sortBy: GameSortBy = POPULARITY): PaginatedGames!
   game(id: String!): Game
@@ -77,6 +97,9 @@ type Query {
   results(skip: Int = 0, take: Int = 10): PaginatedResults!
   result(id: String!): Result
   latestResultByGameName(gameName: String!): Result
+  searchBggGames(query: String!): [BggGameSearchResult!]!
+  getBggGameDetails(bggId: String!): BggGameDetails!
+  getBggGameStats(bggId: String!): BggGameStats!
 }
 
 enum GameSortBy {
