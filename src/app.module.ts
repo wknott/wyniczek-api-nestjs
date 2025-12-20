@@ -15,6 +15,9 @@ import { BggModule } from './bgg/bgg.module';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      sortSchema: true,
+      playground: true,
+      introspection: true,
     }),
 
     GamesModule,

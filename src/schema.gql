@@ -2,26 +2,53 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type PointCategory {
-  id: String!
-  name: String!
-  gameId: String!
+type BggGameDetails {
+  bggId: ID!
+  img: String
+  maxPlayers: Int!
+  minPlayers: Int!
+  names: [String!]!
+  thumbnail: String
 }
 
-type Game {
-  id: String!
+type BggGameSearchResult {
+  bggId: ID!
   name: String!
-  minPlayers: Int!
-  maxPlayers: Int!
+  yearPublished: Int
+}
+
+type BggGameStats {
+  bggRank: Int!
+  weight: Float!
+}
+
+input CreateGameInput {
   bggId: Int
-  bggRank: Int
-  bggWeight: Float
-  imgUrl: String
-  thumbnailUrl: String
+  name: String!
+  pointCategoryNames: [String!]
   userId: String!
-  pointCategories: [PointCategory!]
-  lastPlayedAt: DateTime
-  latestResult: Result
+}
+
+input CreatePlayerInput {
+  name: String!
+  userId: String!
+}
+
+input CreatePointInput {
+  pointCategoryId: String!
+  value: Int
+}
+
+input CreateResultInput {
+  gameId: String!
+  playingTime: Int
+  scores: [CreateScoreInput!]!
+  userId: String!
+}
+
+input CreateScoreInput {
+  playerId: String!
+  points: [CreatePointInput]
 }
 
 """
@@ -29,8 +56,46 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type Game {
+  bggId: Int
+  bggRank: Int
+  bggWeight: Float
+  id: String!
+  imgUrl: String
+  lastPlayedAt: DateTime
+  latestResult: Result
+  maxPlayers: Int!
+  minPlayers: Int!
+  name: String!
+  pointCategories: [PointCategory!]
+  thumbnailUrl: String
+  userId: String!
+}
+
+enum GameSortBy {
+  ALPHABETICAL
+  LAST_PLAYED
+  POPULARITY
+}
+
+type Mutation {
+  createGame(createGameInput: CreateGameInput!): Game!
+  createPlayer(createPlayerInput: CreatePlayerInput!): Player!
+  createResult(createResultInput: CreateResultInput!): Result!
+  removePlayer(id: String!): Player!
+  removeResult(id: String!): Result!
+  syncAllGamesWithBgg: [Game!]!
+  syncGameWithBgg(id: String!): Game!
+  updateResult(updateResultInput: UpdateResultInput!): Result!
+}
+
 type PaginatedGames {
   items: [Game!]!
+  total: Int!
+}
+
+type PaginatedResults {
+  items: [Result!]!
   total: Int!
 }
 
@@ -42,118 +107,53 @@ type Player {
 
 type Point {
   id: String!
-  scoreId: String!
-  pointCategoryId: String!
-  value: Int
   pointCategory: PointCategory!
+  pointCategoryId: String!
+  scoreId: String!
+  value: Int
+}
+
+type PointCategory {
+  gameId: String!
+  id: String!
+  name: String!
+}
+
+type Query {
+  game(id: String!): Game
+  games(skip: Int = 0, sortBy: GameSortBy = POPULARITY, take: Int = 10): PaginatedGames!
+  getBggGameDetails(bggId: String!): BggGameDetails!
+  getBggGameStats(bggId: String!): BggGameStats!
+  latestResultByGameName(gameName: String!): Result
+  player(id: String!): Player
+  players: [Player!]!
+  result(id: String!): Result
+  results(skip: Int = 0, take: Int = 10): PaginatedResults!
+  searchBggGames(query: String!): [BggGameSearchResult!]!
+}
+
+type Result {
+  createdAt: DateTime!
+  game: Game!
+  gameId: String!
+  id: String!
+  playingTime: Int
+  scores: [Score!]
+  userId: String!
 }
 
 type Score {
   id: String!
-  resultId: String!
-  playerId: String!
   player: Player
-  points: [Point!]
-}
-
-type Result {
-  id: String!
-  gameId: String!
-  game: Game!
-  createdAt: DateTime!
-  playingTime: Int
-  userId: String!
-  scores: [Score!]
-}
-
-type PaginatedResults {
-  items: [Result!]!
-  total: Int!
-}
-
-type BggGameSearchResult {
-  bggId: ID!
-  name: String!
-  yearPublished: Int
-}
-
-type BggGameDetails {
-  bggId: ID!
-  names: [String!]!
-  img: String
-  thumbnail: String
-  minPlayers: Int!
-  maxPlayers: Int!
-}
-
-type BggGameStats {
-  bggRank: Int!
-  weight: Float!
-}
-
-type Query {
-  games(skip: Int = 0, take: Int = 10, sortBy: GameSortBy = POPULARITY): PaginatedGames!
-  game(id: String!): Game
-  searchBggGames(query: String!): [BggGameSearchResult!]!
-  getBggGameDetails(bggId: String!): BggGameDetails!
-  getBggGameStats(bggId: String!): BggGameStats!
-  players: [Player!]!
-  player(id: String!): Player
-  results(skip: Int = 0, take: Int = 10): PaginatedResults!
-  result(id: String!): Result
-  latestResultByGameName(gameName: String!): Result
-}
-
-enum GameSortBy {
-  POPULARITY
-  LAST_PLAYED
-  ALPHABETICAL
-}
-
-type Mutation {
-  createGame(createGameInput: CreateGameInput!): Game!
-  syncGameWithBgg(id: String!): Game!
-  syncAllGamesWithBgg: [Game!]!
-  createPlayer(createPlayerInput: CreatePlayerInput!): Player!
-  removePlayer(id: String!): Player!
-  createResult(createResultInput: CreateResultInput!): Result!
-  updateResult(updateResultInput: UpdateResultInput!): Result!
-  removeResult(id: String!): Result!
-}
-
-input CreateGameInput {
-  name: String!
-  bggId: Int
-  userId: String!
-  pointCategoryNames: [String!]
-}
-
-input CreatePlayerInput {
-  name: String!
-  userId: String!
-}
-
-input CreateResultInput {
-  gameId: String!
-  userId: String!
-  playingTime: Int
-  scores: [CreateScoreInput!]!
-}
-
-input CreateScoreInput {
   playerId: String!
-  points: [CreatePointInput]
-}
-
-input CreatePointInput {
-  pointCategoryId: String!
-  value: Int
+  points: [Point!]
+  resultId: String!
 }
 
 input UpdateResultInput {
   gameId: String
-  userId: String
+  id: String!
   playingTime: Int
   scores: [CreateScoreInput!]
-  id: String!
+  userId: String
 }
