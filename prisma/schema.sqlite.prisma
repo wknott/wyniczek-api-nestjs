@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Player {
+  id     String  @id @default(cuid())
+  name   String
+  scores Score[]
+  userId String
+
+  @@unique([name, userId])
+}
+
+model Game {
+  id              String          @id @default(cuid())
+  name            String
+  minPlayers      Int
+  maxPlayers      Int
+  pointCategories PointCategory[]
+  bggId           Int?
+  bggRank         Int?
+  bggWeight       Float?
+  imgUrl          String?
+  thumbnailUrl    String?
+  results         Result[]
+  userId          String
+
+  @@unique([bggId, userId])
+}
+
+model PointCategory {
+  id     String  @id @default(cuid())
+  name   String
+  game   Game    @relation(fields: [gameId], references: [id])
+  gameId String
+  points Point[]
+}
+
+model Result {
+  id          String   @id @default(cuid())
+  game        Game     @relation(fields: [gameId], references: [id])
+  gameId      String
+  scores      Score[]
+  createdAt   DateTime @default(now())
+  playingTime Int?
+  userId      String
+}
+
+model Score {
+  id       String  @id @default(cuid())
+  result   Result  @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  resultId String
+  player   Player  @relation(fields: [playerId], references: [id])
+  playerId String
+  points   Point[]
+}
+
+model Point {
+  id              String        @id @default(cuid())
+  score           Score         @relation(fields: [scoreId], references: [id], onDelete: Cascade)
+  scoreId         String
+  pointCategory   PointCategory @relation(fields: [pointCategoryId], references: [id])
+  pointCategoryId String
+  value           Int?
+}
