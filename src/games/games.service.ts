@@ -12,14 +12,16 @@ export class GamesService {
         private bggService: BggService,
     ) { }
 
-    async findAll(skip: number = 0, take: number = 10, sortBy: GameSortBy = GameSortBy.POPULARITY): Promise<{ items: Game[]; total: number }> {
-        const total = await this.prisma.game.count();
+    async findAll(skip: number = 0, take: number = 10, sortBy: GameSortBy = GameSortBy.POPULARITY, includeNotInCollection: boolean = false): Promise<{ items: Game[]; total: number }> {
+        const whereClause = includeNotInCollection ? {} : { inCollection: true };
+        const total = await this.prisma.game.count({ where: whereClause });
 
         let items: Game[];
 
         switch (sortBy) {
             case GameSortBy.POPULARITY:
                 items = await this.prisma.game.findMany({
+                    where: whereClause,
                     skip,
                     take,
                     include: {
@@ -33,6 +35,7 @@ export class GamesService {
 
             case GameSortBy.LAST_PLAYED:
                 const gamesWithLatestResult = await this.prisma.game.findMany({
+                    where: whereClause,
                     include: {
                         pointCategories: true,
                         results: {
@@ -57,6 +60,7 @@ export class GamesService {
             case GameSortBy.ALPHABETICAL:
             default:
                 items = await this.prisma.game.findMany({
+                    where: whereClause,
                     skip,
                     take,
                     include: {
@@ -180,5 +184,15 @@ export class GamesService {
         }
 
         return updatedGames;
+    }
+
+    async updateCollectionStatus(gameId: string, inCollection: boolean): Promise<Game> {
+        return this.prisma.game.update({
+            where: { id: gameId },
+            data: { inCollection },
+            include: {
+                pointCategories: true,
+            },
+        });
     }
 }

@@ -11,6 +11,9 @@ export class CreateGameInput {
     @Field(() => String)
     userId: string;
 
+    @Field(() => Boolean, { nullable: true, defaultValue: true })
+    inCollection?: boolean;
+
     @Field(() => [String], { nullable: true })
     pointCategoryNames?: string[];
 }

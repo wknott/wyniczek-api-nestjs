@@ -21,6 +21,7 @@ model Game {
   name            String
   minPlayers      Int
   maxPlayers      Int
+  inCollection    Boolean         @default(true)
   pointCategories PointCategory[]
   bggId           Int?
   bggRank         Int?

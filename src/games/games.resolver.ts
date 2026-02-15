@@ -13,8 +13,9 @@ export class GamesResolver {
         @Args('skip', { type: () => Int, nullable: true, defaultValue: 0 }) skip: number,
         @Args('take', { type: () => Int, nullable: true, defaultValue: 10 }) take: number,
         @Args('sortBy', { type: () => GameSortBy, nullable: true, defaultValue: GameSortBy.POPULARITY }) sortBy: GameSortBy,
+        @Args('includeNotInCollection', { type: () => Boolean, nullable: true, defaultValue: false }) includeNotInCollection: boolean,
     ) {
-        return this.gamesService.findAll(skip, take, sortBy);
+        return this.gamesService.findAll(skip, take, sortBy, includeNotInCollection);
     }
 
     @Query(() => Game, { name: 'game', nullable: true })
@@ -46,5 +47,13 @@ export class GamesResolver {
     @Mutation(() => [Game])
     syncAllGamesWithBgg() {
         return this.gamesService.syncAllGamesWithBgg();
+    }
+
+    @Mutation(() => Game)
+    updateGameCollectionStatus(
+        @Args('id', { type: () => String }) id: string,
+        @Args('inCollection', { type: () => Boolean }) inCollection: boolean,
+    ) {
+        return this.gamesService.updateCollectionStatus(id, inCollection);
     }
 }

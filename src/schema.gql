@@ -24,6 +24,7 @@ type BggGameStats {
 
 input CreateGameInput {
   bggId: Int
+  inCollection: Boolean = true
   name: String!
   pointCategoryNames: [String!]
   userId: String!
@@ -62,6 +63,7 @@ type Game {
   bggWeight: Float
   id: String!
   imgUrl: String
+  inCollection: Boolean!
   lastPlayedAt: DateTime
   latestResult: Result
   maxPlayers: Int!
@@ -86,6 +88,7 @@ type Mutation {
   removeResult(id: String!): Result!
   syncAllGamesWithBgg: [Game!]!
   syncGameWithBgg(id: String!): Game!
+  updateGameCollectionStatus(id: String!, inCollection: Boolean!): Game!
   updateResult(updateResultInput: UpdateResultInput!): Result!
 }
 
@@ -121,7 +124,7 @@ type PointCategory {
 
 type Query {
   game(id: String!): Game
-  games(skip: Int = 0, sortBy: GameSortBy = POPULARITY, take: Int = 10): PaginatedGames!
+  games(includeNotInCollection: Boolean = false, skip: Int = 0, sortBy: GameSortBy = POPULARITY, take: Int = 10): PaginatedGames!
   getBggGameDetails(bggId: String!): BggGameDetails!
   getBggGameStats(bggId: String!): BggGameStats!
   latestResultByGameName(gameName: String!): Result

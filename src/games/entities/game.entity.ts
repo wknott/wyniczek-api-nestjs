@@ -36,6 +36,9 @@ export class Game {
     @Field(() => Int)
     maxPlayers: number;
 
+    @Field(() => Boolean)
+    inCollection: boolean;
+
     @Field(() => Int, { nullable: true })
     bggId?: number | null;
 
