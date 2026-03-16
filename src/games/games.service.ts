@@ -4,6 +4,7 @@ import { BggService } from '../bgg/bgg.service';
 
 import { Game, GameSortBy } from './entities/game.entity';
 import { CreateGameInput } from './dto/create-game.input';
+import { UpdatePointCategoryInput } from './dto/update-game-categories.input';
 
 @Injectable()
 export class GamesService {
@@ -193,6 +194,53 @@ export class GamesService {
             include: {
                 pointCategories: true,
             },
+        });
+    }
+
+    async updateGameCategories(gameId: string, categories: UpdatePointCategoryInput[]): Promise<Game> {
+        return this.prisma.$transaction(async (tx) => {
+            const existingCategories = await tx.pointCategory.findMany({ where: { gameId } });
+            const existingCategoriesMap = new Map(existingCategories.map((c: any) => [c.id, c]));
+
+            const categoriesToCreate = categories.filter((c: any) => !c.id);
+            const categoriesToUpdate = categories.filter((c: any) => c.id && existingCategoriesMap.has(c.id));
+            const categoriesToUpdateIds = new Set(categoriesToUpdate.map((c: any) => c.id));
+            const categoriesToDelete = existingCategories.filter((c: any) => !categoriesToUpdateIds.has(c.id));
+
+            if (categoriesToDelete.length > 0) {
+                await tx.pointCategory.deleteMany({
+                    where: { id: { in: categoriesToDelete.map((c: any) => c.id) } }
+                });
+            }
+
+            for (const category of categoriesToUpdate) {
+                if (category.id) {
+                    await tx.pointCategory.update({
+                        where: { id: category.id },
+                        data: { name: category.name }
+                    });
+                }
+            }
+
+            if (categoriesToCreate.length > 0) {
+                await tx.pointCategory.createMany({
+                    data: categoriesToCreate.map((c: any) => ({
+                        name: c.name,
+                        gameId
+                    }))
+                });
+            }
+
+            const game = await tx.game.findUnique({
+                where: { id: gameId },
+                include: { pointCategories: true }
+            });
+
+            if (!game) {
+                throw new Error('Game not found');
+            }
+
+            return game;
         });
     }
 }

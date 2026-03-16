@@ -88,6 +88,7 @@ type Mutation {
   removeResult(id: String!): Result!
   syncAllGamesWithBgg: [Game!]!
   syncGameWithBgg(id: String!): Game!
+  updateGameCategories(categories: [UpdatePointCategoryInput!]!, id: String!): Game!
   updateGameCollectionStatus(id: String!, inCollection: Boolean!): Game!
   updateResult(updateResultInput: UpdateResultInput!): Result!
 }
@@ -151,6 +152,11 @@ type Score {
   playerId: String!
   points: [Point!]
   resultId: String!
+}
+
+input UpdatePointCategoryInput {
+  id: String
+  name: String!
 }
 
 input UpdateResultInput {

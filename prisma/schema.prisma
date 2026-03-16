@@ -65,7 +65,7 @@ model Point {
   id              String        @id @default(cuid())
   score           Score         @relation(fields: [scoreId], references: [id], onDelete: Cascade)
   scoreId         String
-  pointCategory   PointCategory @relation(fields: [pointCategoryId], references: [id])
+  pointCategory   PointCategory @relation(fields: [pointCategoryId], references: [id], onDelete: Cascade)
   pointCategoryId String
   value           Int?
 }

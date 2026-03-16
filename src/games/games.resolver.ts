@@ -3,7 +3,7 @@ import { GamesService } from './games.service';
 import { Game, PaginatedGames, GameSortBy } from './entities/game.entity';
 import { Result } from '../results/entities/result.entity';
 import { CreateGameInput } from './dto/create-game.input';
-
+import { UpdatePointCategoryInput } from './dto/update-game-categories.input';
 @Resolver(() => Game)
 export class GamesResolver {
     constructor(private readonly gamesService: GamesService) { }
@@ -55,5 +55,13 @@ export class GamesResolver {
         @Args('inCollection', { type: () => Boolean }) inCollection: boolean,
     ) {
         return this.gamesService.updateCollectionStatus(id, inCollection);
+    }
+
+    @Mutation(() => Game)
+    updateGameCategories(
+        @Args('id', { type: () => String }) id: string,
+        @Args('categories', { type: () => [UpdatePointCategoryInput] }) categories: UpdatePointCategoryInput[],
+    ) {
+        return this.gamesService.updateGameCategories(id, categories);
     }
 }
