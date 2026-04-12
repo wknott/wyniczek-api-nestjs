@@ -63,6 +63,44 @@ export class GamesService {
         });
         break;
 
+      case GameSortBy.AVG_PLAYING_TIME_2P: {
+        const allGames = await this.prisma.game.findMany({
+          where: whereClause,
+          include: {
+            pointCategories: true,
+            results: {
+              where: { playingTime: { not: null } },
+              include: { _count: { select: { scores: true } } },
+            },
+          },
+        });
+
+        const withAvg = allGames.map((game) => {
+          const twoPlayerResults = game.results.filter(
+            (r) => r._count.scores === 2,
+          );
+          const avg =
+            twoPlayerResults.length > 0
+              ? twoPlayerResults.reduce((acc, r) => acc + r.playingTime!, 0) /
+                twoPlayerResults.length
+              : null;
+          return { game, avg };
+        });
+
+        withAvg.sort((a, b) => {
+          if (a.avg === null && b.avg === null) return 0;
+          if (a.avg === null) return 1;
+          if (b.avg === null) return -1;
+          return a.avg - b.avg;
+        });
+
+        items = withAvg.slice(skip, skip + take).map(({ game }) => {
+          const { results, ...gameWithoutResults } = game;
+          return gameWithoutResults as Game;
+        });
+        break;
+      }
+
       case GameSortBy.ALPHABETICAL:
       default:
         items = await this.prisma.game.findMany({

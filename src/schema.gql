@@ -77,6 +77,7 @@ type Game {
 
 enum GameSortBy {
   ALPHABETICAL
+  AVG_PLAYING_TIME_2P
   LAST_PLAYED
   POPULARITY
 }

@@ -10,6 +10,7 @@ export enum GameSortBy {
   POPULARITY = 'POPULARITY',
   LAST_PLAYED = 'LAST_PLAYED',
   ALPHABETICAL = 'ALPHABETICAL',
+  AVG_PLAYING_TIME_2P = 'AVG_PLAYING_TIME_2P',
 }
 
 registerEnumType(GameSortBy, {
