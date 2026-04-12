@@ -75,27 +75,23 @@ export class GamesService {
           },
         });
 
-        const withAvg = allGames.map((game) => {
-          const twoPlayerResults = game.results.filter(
-            (r) => r._count.scores === 2,
-          );
-          const avg =
-            twoPlayerResults.length > 0
-              ? twoPlayerResults.reduce((acc, r) => acc + r.playingTime!, 0) /
-                twoPlayerResults.length
-              : null;
-          return { game, avg };
+        const withMedian = allGames.map((game) => {
+          const times = game.results
+            .filter((r) => r._count.scores === 2)
+            .map((r) => r.playingTime!);
+          return { game, median: times.length > 0 ? this.median(times) : null };
         });
 
-        withAvg.sort((a, b) => {
-          if (a.avg === null && b.avg === null) return 0;
-          if (a.avg === null) return 1;
-          if (b.avg === null) return -1;
-          return a.avg - b.avg;
+        withMedian.sort((a, b) => {
+          if (a.median === null && b.median === null) return 0;
+          if (a.median === null) return 1;
+          if (b.median === null) return -1;
+          return a.median - b.median;
         });
 
-        items = withAvg.slice(skip, skip + take).map(({ game }) => {
+        items = withMedian.slice(skip, skip + take).map(({ game }) => {
           const { results, ...gameWithoutResults } = game;
+          void results;
           return gameWithoutResults as Game;
         });
         break;
@@ -118,6 +114,14 @@ export class GamesService {
     return { items, total };
   }
 
+  private median(values: number[]): number {
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0
+      ? sorted[mid]
+      : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+  }
+
   async getAvgPlayingTime2Players(gameId: string): Promise<number | null> {
     const results = await this.prisma.result.findMany({
       where: {
@@ -129,11 +133,11 @@ export class GamesService {
       },
     });
 
-    const twoPlayerResults = results.filter((r) => r._count.scores === 2);
-    if (twoPlayerResults.length === 0) return null;
+    const times = results
+      .filter((r) => r._count.scores === 2)
+      .map((r) => r.playingTime!);
 
-    const sum = twoPlayerResults.reduce((acc, r) => acc + r.playingTime!, 0);
-    return Math.round(sum / twoPlayerResults.length);
+    return times.length > 0 ? this.median(times) : null;
   }
 
   async findLatestResult(gameId: string) {
