@@ -13,175 +13,195 @@ import { UpdateResultInput } from './dto/update-result.input';
 
 @Injectable()
 export class ResultsService {
-    constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-    private prepareScoresData(scores: CreateScoreInput[], gameCategories: { id: string }[]) {
-        return scores.map((scoreInput) => {
-            const inputPoints = scoreInput.points || [];
+  private prepareScoresData(
+    scores: CreateScoreInput[],
+    gameCategories: { id: string }[],
+  ) {
+    return scores.map((scoreInput) => {
+      const inputPoints = scoreInput.points || [];
 
-            const finalPoints = gameCategories.map(category => {
-                const inputPoint = inputPoints.find(p => p.pointCategoryId === category.id);
-                return {
-                    pointCategoryId: category.id,
-                    value: inputPoint?.value ?? 0
-                };
-            });
+      const finalPoints = gameCategories.map((category) => {
+        const inputPoint = inputPoints.find(
+          (p) => p.pointCategoryId === category.id,
+        );
+        return {
+          pointCategoryId: category.id,
+          value: inputPoint?.value ?? 0,
+        };
+      });
 
-            return {
-                playerId: scoreInput.playerId,
-                points: finalPoints,
-            };
-        });
+      return {
+        playerId: scoreInput.playerId,
+        points: finalPoints,
+      };
+    });
+  }
+
+  async create(createResultInput: CreateResultInput): Promise<Result> {
+    const { gameId, userId, scores, playingTime } = createResultInput;
+
+    const game = await this.prisma.game.findUnique({
+      where: { id: gameId },
+      include: { pointCategories: true },
+    });
+
+    if (!game) {
+      throw new Error(`Game with ID ${gameId} not found`);
     }
 
-    async create(createResultInput: CreateResultInput): Promise<Result> {
-        const { gameId, userId, scores, playingTime } = createResultInput;
+    const scoresData = this.prepareScoresData(scores, game.pointCategories);
 
+    return this.prisma.result.create({
+      data: {
+        gameId,
+        userId,
+        playingTime,
+        scores: {
+          create: scoresData.map((score) => ({
+            playerId: score.playerId,
+            points: {
+              create: score.points.map((point) => ({
+                pointCategoryId: point.pointCategoryId,
+                value: point.value,
+              })),
+            },
+          })),
+        },
+      },
+    });
+  }
+
+  async findAll(
+    skip: number = 0,
+    take: number = 10,
+    gameId?: string,
+  ): Promise<{ items: Result[]; total: number }> {
+    const where = gameId ? { gameId } : {};
+
+    const [items, total] = await Promise.all([
+      this.prisma.result.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.result.count({ where }),
+    ]);
+
+    return { items, total };
+  }
+
+  async findOne(id: string): Promise<Result | null> {
+    return this.prisma.result.findUnique({
+      where: { id },
+    });
+  }
+
+  async update(
+    id: string,
+    updateResultInput: UpdateResultInput,
+  ): Promise<Result> {
+    const { scores, id: _, ...data } = updateResultInput;
+
+    if (scores) {
+      let gameId = data.gameId;
+      if (!gameId) {
+        const currentResult = await this.prisma.result.findUnique({
+          where: { id },
+          select: { gameId: true },
+        });
+        if (currentResult) gameId = currentResult.gameId;
+      }
+
+      let gameCategories: { id: string }[] = [];
+      if (gameId) {
         const game = await this.prisma.game.findUnique({
-            where: { id: gameId },
-            include: { pointCategories: true }
+          where: { id: gameId },
+          include: { pointCategories: true },
         });
+        if (game) gameCategories = game.pointCategories;
+      }
 
-        if (!game) {
-            throw new Error(`Game with ID ${gameId} not found`);
-        }
+      const scoresData = this.prepareScoresData(scores, gameCategories);
 
-        const scoresData = this.prepareScoresData(scores, game.pointCategories);
-
-        return this.prisma.result.create({
-            data: {
-                gameId,
-                userId,
-                playingTime,
-                scores: {
-                    create: scoresData.map(score => ({
-                        playerId: score.playerId,
-                        points: {
-                            create: score.points.map(point => ({
-                                pointCategoryId: point.pointCategoryId,
-                                value: point.value,
-                            })),
-                        },
-                    })),
-                },
-            },
-        });
+      return this.prisma.result.update({
+        where: { id },
+        data: {
+          ...data,
+          scores: {
+            deleteMany: {},
+            create: scoresData.map((score) => ({
+              playerId: score.playerId,
+              points: {
+                create: score.points,
+              },
+            })),
+          },
+        },
+      });
     }
 
-    async findAll(skip: number = 0, take: number = 10): Promise<{ items: Result[]; total: number }> {
-        const [items, total] = await Promise.all([
-            this.prisma.result.findMany({
-                skip,
-                take,
-                orderBy: { createdAt: 'desc' },
-            }),
-            this.prisma.result.count(),
-        ]);
+    return this.prisma.result.update({
+      where: { id },
+      data: {
+        ...data,
+      },
+    });
+  }
 
-        return { items, total };
-    }
+  async remove(id: string): Promise<Result> {
+    return this.prisma.result.delete({
+      where: { id },
+    });
+  }
 
-    async findOne(id: string): Promise<Result | null> {
-        return this.prisma.result.findUnique({
-            where: { id },
-        });
-    }
+  async findLatestByGameName(gameName: string): Promise<Result | null> {
+    return this.prisma.result.findFirst({
+      where: {
+        game: {
+          name: {
+            contains: gameName,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 
-    async update(id: string, updateResultInput: UpdateResultInput): Promise<Result> {
-        const { scores, id: _, ...data } = updateResultInput;
+  async findGame(gameId: string): Promise<Game | null> {
+    return this.prisma.game.findUnique({
+      where: { id: gameId },
+      include: { pointCategories: true },
+    });
+  }
 
-        if (scores) {
-            let gameId = data.gameId;
-            if (!gameId) {
-                const currentResult = await this.prisma.result.findUnique({ where: { id }, select: { gameId: true } });
-                if (currentResult) gameId = currentResult.gameId;
-            }
+  async findScores(resultId: string): Promise<Score[]> {
+    return this.prisma.score.findMany({
+      where: { resultId },
+    });
+  }
 
-            let gameCategories: { id: string }[] = [];
-            if (gameId) {
-                const game = await this.prisma.game.findUnique({
-                    where: { id: gameId },
-                    include: { pointCategories: true }
-                });
-                if (game) gameCategories = game.pointCategories;
-            }
+  async findPlayer(playerId: string): Promise<Player | null> {
+    return this.prisma.player.findUnique({
+      where: { id: playerId },
+    });
+  }
 
-            const scoresData = this.prepareScoresData(scores, gameCategories);
+  async findPoints(scoreId: string): Promise<Point[]> {
+    return this.prisma.point.findMany({
+      where: { scoreId },
+    });
+  }
 
-            return this.prisma.result.update({
-                where: { id },
-                data: {
-                    ...data,
-                    scores: {
-                        deleteMany: {},
-                        create: scoresData.map(score => ({
-                            playerId: score.playerId,
-                            points: {
-                                create: score.points
-                            }
-                        }))
-                    }
-                }
-            });
-        }
-
-        return this.prisma.result.update({
-            where: { id },
-            data: {
-                ...data
-            }
-        });
-    }
-
-    async remove(id: string): Promise<Result> {
-        return this.prisma.result.delete({
-            where: { id },
-        });
-    }
-
-    async findLatestByGameName(gameName: string): Promise<Result | null> {
-        return this.prisma.result.findFirst({
-            where: {
-                game: {
-                    name: {
-                        contains: gameName,
-                    },
-                },
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
-        });
-    }
-
-    async findGame(gameId: string): Promise<Game | null> {
-        return this.prisma.game.findUnique({
-            where: { id: gameId },
-            include: { pointCategories: true },
-        });
-    }
-
-    async findScores(resultId: string): Promise<Score[]> {
-        return this.prisma.score.findMany({
-            where: { resultId },
-        });
-    }
-
-    async findPlayer(playerId: string): Promise<Player | null> {
-        return this.prisma.player.findUnique({
-            where: { id: playerId },
-        });
-    }
-
-    async findPoints(scoreId: string): Promise<Point[]> {
-        return this.prisma.point.findMany({
-            where: { scoreId },
-        });
-    }
-
-    async findPointCategory(pointCategoryId: string): Promise<PointCategory | null> {
-        return this.prisma.pointCategory.findUnique({
-            where: { id: pointCategoryId },
-        });
-    }
+  async findPointCategory(
+    pointCategoryId: string,
+  ): Promise<PointCategory | null> {
+    return this.prisma.pointCategory.findUnique({
+      where: { id: pointCategoryId },
+    });
+  }
 }

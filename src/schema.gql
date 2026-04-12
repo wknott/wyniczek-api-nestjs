@@ -132,7 +132,7 @@ type Query {
   player(id: String!): Player
   players: [Player!]!
   result(id: String!): Result
-  results(skip: Int = 0, take: Int = 10): PaginatedResults!
+  results(gameId: String, skip: Int = 0, take: Int = 10): PaginatedResults!
   searchBggGames(query: String!): [BggGameSearchResult!]!
 }
 
