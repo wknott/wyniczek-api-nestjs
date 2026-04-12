@@ -1,4 +1,12 @@
-import { Resolver, Query, Args, Mutation, ResolveField, Parent, Int } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Args,
+  Mutation,
+  ResolveField,
+  Parent,
+  Int,
+} from '@nestjs/graphql';
 import { GamesService } from './games.service';
 import { Game, PaginatedGames, GameSortBy } from './entities/game.entity';
 import { Result } from '../results/entities/result.entity';
@@ -6,62 +14,84 @@ import { CreateGameInput } from './dto/create-game.input';
 import { UpdatePointCategoryInput } from './dto/update-game-categories.input';
 @Resolver(() => Game)
 export class GamesResolver {
-    constructor(private readonly gamesService: GamesService) { }
+  constructor(private readonly gamesService: GamesService) {}
+  @Query(() => PaginatedGames, { name: 'games' })
+  findAll(
+    @Args('skip', { type: () => Int, nullable: true, defaultValue: 0 })
+    skip: number,
+    @Args('take', { type: () => Int, nullable: true, defaultValue: 10 })
+    take: number,
+    @Args('sortBy', {
+      type: () => GameSortBy,
+      nullable: true,
+      defaultValue: GameSortBy.POPULARITY,
+    })
+    sortBy: GameSortBy,
+    @Args('includeNotInCollection', {
+      type: () => Boolean,
+      nullable: true,
+      defaultValue: false,
+    })
+    includeNotInCollection: boolean,
+  ) {
+    return this.gamesService.findAll(
+      skip,
+      take,
+      sortBy,
+      includeNotInCollection,
+    );
+  }
 
-    @Query(() => PaginatedGames, { name: 'games' })
-    findAll(
-        @Args('skip', { type: () => Int, nullable: true, defaultValue: 0 }) skip: number,
-        @Args('take', { type: () => Int, nullable: true, defaultValue: 10 }) take: number,
-        @Args('sortBy', { type: () => GameSortBy, nullable: true, defaultValue: GameSortBy.POPULARITY }) sortBy: GameSortBy,
-        @Args('includeNotInCollection', { type: () => Boolean, nullable: true, defaultValue: false }) includeNotInCollection: boolean,
-    ) {
-        return this.gamesService.findAll(skip, take, sortBy, includeNotInCollection);
-    }
+  @Query(() => Game, { name: 'game', nullable: true })
+  findOne(@Args('id', { type: () => String }) id: string) {
+    return this.gamesService.findOne(id);
+  }
 
-    @Query(() => Game, { name: 'game', nullable: true })
-    findOne(@Args('id', { type: () => String }) id: string) {
-        return this.gamesService.findOne(id);
-    }
+  @Mutation(() => Game)
+  createGame(@Args('createGameInput') createGameInput: CreateGameInput) {
+    return this.gamesService.create(createGameInput);
+  }
 
-    @Mutation(() => Game)
-    createGame(@Args('createGameInput') createGameInput: CreateGameInput) {
-        return this.gamesService.create(createGameInput);
-    }
+  @ResolveField(() => Int, { nullable: true })
+  async avgPlayingTime2Players(@Parent() game: Game): Promise<number | null> {
+    return this.gamesService.getAvgPlayingTime2Players(game.id);
+  }
 
-    @ResolveField(() => Result, { nullable: true })
-    latestResult(@Parent() game: Game) {
-        return this.gamesService.findLatestResult(game.id);
-    }
+  @ResolveField(() => Result, { nullable: true })
+  latestResult(@Parent() game: Game) {
+    return this.gamesService.findLatestResult(game.id);
+  }
 
-    @ResolveField(() => Date, { nullable: true })
-    async lastPlayedAt(@Parent() game: Game) {
-        const latestResult = await this.gamesService.findLatestResult(game.id);
-        return latestResult?.createdAt ?? null;
-    }
+  @ResolveField(() => Date, { nullable: true })
+  async lastPlayedAt(@Parent() game: Game) {
+    const latestResult = await this.gamesService.findLatestResult(game.id);
+    return latestResult?.createdAt ?? null;
+  }
 
-    @Mutation(() => Game)
-    syncGameWithBgg(@Args('id', { type: () => String }) id: string) {
-        return this.gamesService.syncGameWithBgg(id);
-    }
+  @Mutation(() => Game)
+  syncGameWithBgg(@Args('id', { type: () => String }) id: string) {
+    return this.gamesService.syncGameWithBgg(id);
+  }
 
-    @Mutation(() => [Game])
-    syncAllGamesWithBgg() {
-        return this.gamesService.syncAllGamesWithBgg();
-    }
+  @Mutation(() => [Game])
+  syncAllGamesWithBgg() {
+    return this.gamesService.syncAllGamesWithBgg();
+  }
 
-    @Mutation(() => Game)
-    updateGameCollectionStatus(
-        @Args('id', { type: () => String }) id: string,
-        @Args('inCollection', { type: () => Boolean }) inCollection: boolean,
-    ) {
-        return this.gamesService.updateCollectionStatus(id, inCollection);
-    }
+  @Mutation(() => Game)
+  updateGameCollectionStatus(
+    @Args('id', { type: () => String }) id: string,
+    @Args('inCollection', { type: () => Boolean }) inCollection: boolean,
+  ) {
+    return this.gamesService.updateCollectionStatus(id, inCollection);
+  }
 
-    @Mutation(() => Game)
-    updateGameCategories(
-        @Args('id', { type: () => String }) id: string,
-        @Args('categories', { type: () => [UpdatePointCategoryInput] }) categories: UpdatePointCategoryInput[],
-    ) {
-        return this.gamesService.updateGameCategories(id, categories);
-    }
+  @Mutation(() => Game)
+  updateGameCategories(
+    @Args('id', { type: () => String }) id: string,
+    @Args('categories', { type: () => [UpdatePointCategoryInput] })
+    categories: UpdatePointCategoryInput[],
+  ) {
+    return this.gamesService.updateGameCategories(id, categories);
+  }
 }

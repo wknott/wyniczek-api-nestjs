@@ -1,74 +1,83 @@
-import { ObjectType, Field, Int, Float, registerEnumType } from '@nestjs/graphql';
+import {
+  ObjectType,
+  Field,
+  Int,
+  Float,
+  registerEnumType,
+} from '@nestjs/graphql';
 
 export enum GameSortBy {
-    POPULARITY = 'POPULARITY',
-    LAST_PLAYED = 'LAST_PLAYED',
-    ALPHABETICAL = 'ALPHABETICAL',
+  POPULARITY = 'POPULARITY',
+  LAST_PLAYED = 'LAST_PLAYED',
+  ALPHABETICAL = 'ALPHABETICAL',
 }
 
 registerEnumType(GameSortBy, {
-    name: 'GameSortBy',
+  name: 'GameSortBy',
 });
 
 @ObjectType()
 export class PointCategory {
-    @Field(() => String)
-    id: string;
+  @Field(() => String)
+  id: string;
 
-    @Field(() => String)
-    name: string;
+  @Field(() => String)
+  name: string;
 
-    @Field(() => String)
-    gameId: string;
+  @Field(() => String)
+  gameId: string;
 }
 
 @ObjectType()
 export class Game {
-    @Field(() => String)
-    id: string;
+  @Field(() => String)
+  id: string;
 
-    @Field(() => String)
-    name: string;
+  @Field(() => String)
+  name: string;
 
-    @Field(() => Int)
-    minPlayers: number;
+  @Field(() => Int)
+  minPlayers: number;
 
-    @Field(() => Int)
-    maxPlayers: number;
+  @Field(() => Int)
+  maxPlayers: number;
 
-    @Field(() => Boolean)
-    inCollection: boolean;
+  @Field(() => Boolean)
+  inCollection: boolean;
 
-    @Field(() => Int, { nullable: true })
-    bggId?: number | null;
+  @Field(() => Int, { nullable: true })
+  bggId?: number | null;
 
-    @Field(() => Int, { nullable: true })
-    bggRank?: number | null;
+  @Field(() => Int, { nullable: true })
+  bggRank?: number | null;
 
-    @Field(() => Float, { nullable: true })
-    bggWeight?: number | null;
+  @Field(() => Float, { nullable: true })
+  bggWeight?: number | null;
 
-    @Field(() => String, { nullable: true })
-    imgUrl?: string | null;
+  @Field(() => String, { nullable: true })
+  imgUrl?: string | null;
 
-    @Field(() => String, { nullable: true })
-    thumbnailUrl?: string | null;
+  @Field(() => String, { nullable: true })
+  thumbnailUrl?: string | null;
 
-    @Field(() => String)
-    userId: string;
+  @Field(() => String)
+  userId: string;
 
-    @Field(() => [PointCategory], { nullable: true })
-    pointCategories?: PointCategory[];
+  @Field(() => [PointCategory], { nullable: true })
+  pointCategories?: PointCategory[];
 
-    @Field(() => Date, { nullable: true })
-    lastPlayedAt?: Date | null;
+  @Field(() => Date, { nullable: true })
+  lastPlayedAt?: Date | null;
+
+  @Field(() => Int, { nullable: true })
+  avgPlayingTime2Players?: number | null;
 }
 
 @ObjectType()
 export class PaginatedGames {
-    @Field(() => [Game])
-    items: Game[];
+  @Field(() => [Game])
+  items: Game[];
 
-    @Field(() => Int)
-    total: number;
+  @Field(() => Int)
+  total: number;
 }
