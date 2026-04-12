@@ -31,7 +31,7 @@ export class GamesService {
           skip,
           take,
           include: {
-            pointCategories: true,
+            pointCategories: { orderBy: { order: 'asc' } },
           },
           orderBy: {
             results: { _count: 'desc' },
@@ -43,7 +43,7 @@ export class GamesService {
         const gamesWithLatestResult = await this.prisma.game.findMany({
           where: whereClause,
           include: {
-            pointCategories: true,
+            pointCategories: { orderBy: { order: 'asc' } },
             results: {
               orderBy: { createdAt: 'desc' },
               take: 1,
@@ -67,7 +67,7 @@ export class GamesService {
         const allGames = await this.prisma.game.findMany({
           where: whereClause,
           include: {
-            pointCategories: true,
+            pointCategories: { orderBy: { order: 'asc' } },
             results: {
               where: { playingTime: { not: null } },
               include: { _count: { select: { scores: true } } },
@@ -104,7 +104,7 @@ export class GamesService {
           skip,
           take,
           include: {
-            pointCategories: true,
+            pointCategories: { orderBy: { order: 'asc' } },
           },
           orderBy: { name: 'asc' },
         });
@@ -151,7 +151,7 @@ export class GamesService {
     return this.prisma.game.findUnique({
       where: { id },
       include: {
-        pointCategories: true,
+        pointCategories: { orderBy: { order: 'asc' } },
       },
     });
   }
@@ -198,12 +198,12 @@ export class GamesService {
         pointCategories: {
           create:
             pointCategoryNames && pointCategoryNames.length > 0
-              ? pointCategoryNames.map((name) => ({ name }))
-              : [{ name: 'Punkty' }],
+              ? pointCategoryNames.map((name, index) => ({ name, order: index }))
+              : [{ name: 'Punkty', order: 0 }],
         },
       },
       include: {
-        pointCategories: true,
+        pointCategories: { orderBy: { order: 'asc' } },
       },
     });
   }
@@ -227,7 +227,7 @@ export class GamesService {
         bggWeight: stats.weight,
       },
       include: {
-        pointCategories: true,
+        pointCategories: { orderBy: { order: 'asc' } },
       },
     });
   }
@@ -261,7 +261,7 @@ export class GamesService {
       where: { id: gameId },
       data: { inCollection },
       include: {
-        pointCategories: true,
+        pointCategories: { orderBy: { order: 'asc' } },
       },
     });
   }
@@ -299,7 +299,7 @@ export class GamesService {
         if (category.id) {
           await tx.pointCategory.update({
             where: { id: category.id },
-            data: { name: category.name },
+            data: { name: category.name, order: category.order },
           });
         }
       }
@@ -308,6 +308,7 @@ export class GamesService {
         await tx.pointCategory.createMany({
           data: categoriesToCreate.map((c: any) => ({
             name: c.name,
+            order: c.order,
             gameId,
           })),
         });

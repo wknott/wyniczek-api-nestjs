@@ -123,6 +123,7 @@ type PointCategory {
   gameId: String!
   id: String!
   name: String!
+  order: Int!
 }
 
 type Query {
@@ -159,6 +160,7 @@ type Score {
 input UpdatePointCategoryInput {
   id: String
   name: String!
+  order: Int!
 }
 
 input UpdateResultInput {

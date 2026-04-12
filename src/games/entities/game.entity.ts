@@ -25,6 +25,9 @@ export class PointCategory {
   @Field(() => String)
   name: string;
 
+  @Field(() => Int)
+  order: number;
+
   @Field(() => String)
   gameId: string;
 }

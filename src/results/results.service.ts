@@ -44,7 +44,7 @@ export class ResultsService {
 
     const game = await this.prisma.game.findUnique({
       where: { id: gameId },
-      include: { pointCategories: true },
+      include: { pointCategories: { orderBy: { order: 'asc' } } },
     });
 
     if (!game) {
@@ -119,7 +119,7 @@ export class ResultsService {
       if (gameId) {
         const game = await this.prisma.game.findUnique({
           where: { id: gameId },
-          include: { pointCategories: true },
+          include: { pointCategories: { orderBy: { order: 'asc' } } },
         });
         if (game) gameCategories = game.pointCategories;
       }
@@ -175,7 +175,7 @@ export class ResultsService {
   async findGame(gameId: string): Promise<Game | null> {
     return this.prisma.game.findUnique({
       where: { id: gameId },
-      include: { pointCategories: true },
+      include: { pointCategories: { orderBy: { order: 'asc' } } },
     });
   }
 
