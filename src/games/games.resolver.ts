@@ -9,9 +9,12 @@ import {
 } from '@nestjs/graphql';
 import { GamesService } from './games.service';
 import { Game, PaginatedGames, GameSortBy } from './entities/game.entity';
+import { Expansion } from './entities/expansion.entity';
 import { Result } from '../results/entities/result.entity';
 import { CreateGameInput } from './dto/create-game.input';
 import { UpdatePointCategoryInput } from './dto/update-game-categories.input';
+import { CreateExpansionInput } from './dto/create-expansion.input';
+import { UpdateExpansionInput } from './dto/update-expansion.input';
 @Resolver(() => Game)
 export class GamesResolver {
   constructor(private readonly gamesService: GamesService) {}
@@ -93,5 +96,29 @@ export class GamesResolver {
     categories: UpdatePointCategoryInput[],
   ) {
     return this.gamesService.updateGameCategories(id, categories);
+  }
+
+  @ResolveField(() => [Expansion], { nullable: true })
+  expansions(@Parent() game: Game) {
+    return this.gamesService.findExpansionsByGameId(game.id);
+  }
+
+  @Mutation(() => Expansion)
+  createExpansion(
+    @Args('createExpansionInput') createExpansionInput: CreateExpansionInput,
+  ) {
+    return this.gamesService.createExpansion(createExpansionInput);
+  }
+
+  @Mutation(() => Expansion)
+  updateExpansion(
+    @Args('updateExpansionInput') updateExpansionInput: UpdateExpansionInput,
+  ) {
+    return this.gamesService.updateExpansion(updateExpansionInput);
+  }
+
+  @Mutation(() => Expansion)
+  deleteExpansion(@Args('id', { type: () => String }) id: string) {
+    return this.gamesService.deleteExpansion(id);
   }
 }

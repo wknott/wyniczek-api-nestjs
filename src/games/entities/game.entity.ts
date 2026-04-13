@@ -5,6 +5,10 @@ import {
   Float,
   registerEnumType,
 } from '@nestjs/graphql';
+import { Expansion } from './expansion.entity';
+import { PointCategory } from './point-category.entity';
+
+export { PointCategory } from './point-category.entity';
 
 export enum GameSortBy {
   POPULARITY = 'POPULARITY',
@@ -16,21 +20,6 @@ export enum GameSortBy {
 registerEnumType(GameSortBy, {
   name: 'GameSortBy',
 });
-
-@ObjectType()
-export class PointCategory {
-  @Field(() => String)
-  id: string;
-
-  @Field(() => String)
-  name: string;
-
-  @Field(() => Int)
-  order: number;
-
-  @Field(() => String)
-  gameId: string;
-}
 
 @ObjectType()
 export class Game {
@@ -69,6 +58,9 @@ export class Game {
 
   @Field(() => [PointCategory], { nullable: true })
   pointCategories?: PointCategory[];
+
+  @Field(() => [Expansion], { nullable: true })
+  expansions?: Expansion[];
 
   @Field(() => Date, { nullable: true })
   lastPlayedAt?: Date | null;

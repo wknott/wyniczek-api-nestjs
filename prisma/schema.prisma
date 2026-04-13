@@ -23,6 +23,7 @@ model Game {
   maxPlayers      Int
   inCollection    Boolean         @default(true)
   pointCategories PointCategory[]
+  expansions      Expansion[]
   bggId           Int?
   bggRank         Int?
   bggWeight       Float?
@@ -35,22 +36,35 @@ model Game {
 }
 
 model PointCategory {
-  id     String  @id @default(cuid())
-  name   String
-  order  Int     @default(0)
-  game   Game    @relation(fields: [gameId], references: [id])
-  gameId String
-  points Point[]
+  id          String     @id @default(cuid())
+  name        String
+  order       Int        @default(0)
+  game        Game?      @relation(fields: [gameId], references: [id])
+  gameId      String?
+  expansion   Expansion? @relation(fields: [expansionId], references: [id])
+  expansionId String?
+  points      Point[]
 }
 
 model Result {
-  id          String   @id @default(cuid())
-  game        Game     @relation(fields: [gameId], references: [id])
+  id          String      @id @default(cuid())
+  game        Game        @relation(fields: [gameId], references: [id])
   gameId      String
   scores      Score[]
-  createdAt   DateTime @default(now())
+  expansions  Expansion[]
+  createdAt   DateTime    @default(now())
   playingTime Int?
   userId      String
+}
+
+model Expansion {
+  id              String          @id @default(cuid())
+  name            String
+  gameId          String
+  game            Game            @relation(fields: [gameId], references: [id])
+  pointCategories PointCategory[]
+  results         Result[]
+  deletedAt       DateTime?
 }
 
 model Score {

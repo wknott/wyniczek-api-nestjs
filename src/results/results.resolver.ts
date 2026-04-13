@@ -13,7 +13,8 @@ import { Game } from '../games/entities/game.entity';
 import { Score } from './entities/score.entity';
 import { Player } from '../players/entities/player.entity';
 import { Point } from './entities/point.entity';
-import { PointCategory } from '../games/entities/game.entity';
+import { PointCategory } from '../games/entities/point-category.entity';
+import { Expansion } from '../games/entities/expansion.entity';
 import { CreateResultInput } from './dto/create-result.input';
 import { UpdateResultInput } from './dto/update-result.input';
 
@@ -71,6 +72,11 @@ export class ResultsResolver {
   @ResolveField(() => [Score])
   scores(@Parent() result: Result) {
     return this.resultsService.findScores(result.id);
+  }
+
+  @ResolveField(() => [Expansion])
+  expansions(@Parent() result: Result) {
+    return this.resultsService.findExpansions(result.id);
   }
 }
 

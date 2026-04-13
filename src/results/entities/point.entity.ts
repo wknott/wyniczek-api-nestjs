@@ -1,5 +1,5 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { PointCategory } from '../../games/entities/game.entity';
+import { PointCategory } from '../../games/entities/point-category.entity';
 
 @ObjectType()
 export class Point {

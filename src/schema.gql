@@ -22,6 +22,12 @@ type BggGameStats {
   weight: Float!
 }
 
+input CreateExpansionInput {
+  gameId: String!
+  name: String!
+  pointCategoryNames: [String!]
+}
+
 input CreateGameInput {
   bggId: Int
   inCollection: Boolean = true
@@ -41,6 +47,7 @@ input CreatePointInput {
 }
 
 input CreateResultInput {
+  expansionIds: [String!]
   gameId: String!
   playingTime: Int
   scores: [CreateScoreInput!]!
@@ -57,11 +64,19 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type Expansion {
+  gameId: String!
+  id: String!
+  name: String!
+  pointCategories: [PointCategory!]
+}
+
 type Game {
   avgPlayingTime2Players: Int
   bggId: Int
   bggRank: Int
   bggWeight: Float
+  expansions: [Expansion!]
   id: String!
   imgUrl: String
   inCollection: Boolean!
@@ -83,13 +98,16 @@ enum GameSortBy {
 }
 
 type Mutation {
+  createExpansion(createExpansionInput: CreateExpansionInput!): Expansion!
   createGame(createGameInput: CreateGameInput!): Game!
   createPlayer(createPlayerInput: CreatePlayerInput!): Player!
   createResult(createResultInput: CreateResultInput!): Result!
+  deleteExpansion(id: String!): Expansion!
   removePlayer(id: String!): Player!
   removeResult(id: String!): Result!
   syncAllGamesWithBgg: [Game!]!
   syncGameWithBgg(id: String!): Game!
+  updateExpansion(updateExpansionInput: UpdateExpansionInput!): Expansion!
   updateGameCategories(categories: [UpdatePointCategoryInput!]!, id: String!): Game!
   updateGameCollectionStatus(id: String!, inCollection: Boolean!): Game!
   updateResult(updateResultInput: UpdateResultInput!): Result!
@@ -120,7 +138,8 @@ type Point {
 }
 
 type PointCategory {
-  gameId: String!
+  expansionId: String
+  gameId: String
   id: String!
   name: String!
   order: Int!
@@ -141,6 +160,7 @@ type Query {
 
 type Result {
   createdAt: DateTime!
+  expansions: [Expansion!]
   game: Game!
   gameId: String!
   id: String!
@@ -157,6 +177,12 @@ type Score {
   resultId: String!
 }
 
+input UpdateExpansionInput {
+  categories: [UpdatePointCategoryInput!]
+  id: String!
+  name: String
+}
+
 input UpdatePointCategoryInput {
   id: String
   name: String!
@@ -164,6 +190,7 @@ input UpdatePointCategoryInput {
 }
 
 input UpdateResultInput {
+  expansionIds: [String!]
   gameId: String
   id: String!
   playingTime: Int

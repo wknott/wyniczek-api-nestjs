@@ -31,4 +31,7 @@ export class CreateResultInput {
 
     @Field(() => [CreateScoreInput])
     scores: CreateScoreInput[];
+
+    @Field(() => [String], { nullable: true })
+    expansionIds?: string[];
 }

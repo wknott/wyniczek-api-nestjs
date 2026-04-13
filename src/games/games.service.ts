@@ -3,8 +3,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BggService } from '../bgg/bgg.service';
 
 import { Game, GameSortBy } from './entities/game.entity';
+import { Expansion } from './entities/expansion.entity';
 import { CreateGameInput } from './dto/create-game.input';
 import { UpdatePointCategoryInput } from './dto/update-game-categories.input';
+import { CreateExpansionInput } from './dto/create-expansion.input';
+import { UpdateExpansionInput } from './dto/update-expansion.input';
 
 @Injectable()
 export class GamesService {
@@ -263,6 +266,95 @@ export class GamesService {
       include: {
         pointCategories: { orderBy: { order: 'asc' } },
       },
+    });
+  }
+
+  async findExpansionsByGameId(gameId: string): Promise<Expansion[]> {
+    return this.prisma.expansion.findMany({
+      where: { gameId, deletedAt: null },
+      include: { pointCategories: { orderBy: { order: 'asc' } } },
+    });
+  }
+
+  async createExpansion(input: CreateExpansionInput): Promise<Expansion> {
+    const { gameId, name, pointCategoryNames } = input;
+    return this.prisma.expansion.create({
+      data: {
+        gameId,
+        name,
+        pointCategories: {
+          create:
+            pointCategoryNames && pointCategoryNames.length > 0
+              ? pointCategoryNames.map((catName, index) => ({
+                  name: catName,
+                  order: index,
+                }))
+              : [],
+        },
+      },
+      include: { pointCategories: { orderBy: { order: 'asc' } } },
+    });
+  }
+
+  async updateExpansion(input: UpdateExpansionInput): Promise<Expansion> {
+    const { id, name, categories } = input;
+
+    return this.prisma.$transaction(async (tx) => {
+      if (name !== undefined) {
+        await tx.expansion.update({ where: { id }, data: { name } });
+      }
+
+      if (categories !== undefined) {
+        const existingCategories = await tx.pointCategory.findMany({
+          where: { expansionId: id },
+        });
+        const existingMap = new Map(existingCategories.map((c) => [c.id, c]));
+
+        const toCreate = categories.filter((c) => !c.id);
+        const toUpdate = categories.filter(
+          (c) => c.id && existingMap.has(c.id!),
+        );
+        const toUpdateIds = new Set(toUpdate.map((c) => c.id));
+        const toDelete = existingCategories.filter(
+          (c) => !toUpdateIds.has(c.id),
+        );
+
+        if (toDelete.length > 0) {
+          await tx.pointCategory.deleteMany({
+            where: { id: { in: toDelete.map((c) => c.id) } },
+          });
+        }
+
+        for (const category of toUpdate) {
+          await tx.pointCategory.update({
+            where: { id: category.id! },
+            data: { name: category.name, order: category.order },
+          });
+        }
+
+        if (toCreate.length > 0) {
+          await tx.pointCategory.createMany({
+            data: toCreate.map((c) => ({
+              name: c.name,
+              order: c.order,
+              expansionId: id,
+            })),
+          });
+        }
+      }
+
+      return tx.expansion.findUniqueOrThrow({
+        where: { id },
+        include: { pointCategories: { orderBy: { order: 'asc' } } },
+      });
+    });
+  }
+
+  async deleteExpansion(id: string): Promise<Expansion> {
+    return this.prisma.expansion.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+      include: { pointCategories: { orderBy: { order: 'asc' } } },
     });
   }
 

@@ -3,10 +3,11 @@ import { PrismaService } from '../prisma/prisma.service';
 
 import { Result } from './entities/result.entity';
 import { Game } from '../games/entities/game.entity';
+import { Expansion } from '../games/entities/expansion.entity';
 import { Score } from './entities/score.entity';
 import { Player } from '../players/entities/player.entity';
 import { Point } from './entities/point.entity';
-import { PointCategory } from '../games/entities/game.entity';
+import { PointCategory } from '../games/entities/point-category.entity';
 
 import { CreateResultInput, CreateScoreInput } from './dto/create-result.input';
 import { UpdateResultInput } from './dto/update-result.input';
@@ -40,7 +41,8 @@ export class ResultsService {
   }
 
   async create(createResultInput: CreateResultInput): Promise<Result> {
-    const { gameId, userId, scores, playingTime } = createResultInput;
+    const { gameId, userId, scores, playingTime, expansionIds } =
+      createResultInput;
 
     const game = await this.prisma.game.findUnique({
       where: { id: gameId },
@@ -51,13 +53,27 @@ export class ResultsService {
       throw new Error(`Game with ID ${gameId} not found`);
     }
 
-    const scoresData = this.prepareScoresData(scores, game.pointCategories);
+    let allCategories: { id: string }[] = [...game.pointCategories];
+
+    if (expansionIds && expansionIds.length > 0) {
+      const expansionCategories = await this.prisma.pointCategory.findMany({
+        where: { expansionId: { in: expansionIds } },
+        orderBy: { order: 'asc' },
+      });
+      allCategories = [...allCategories, ...expansionCategories];
+    }
+
+    const scoresData = this.prepareScoresData(scores, allCategories);
 
     return this.prisma.result.create({
       data: {
         gameId,
         userId,
         playingTime,
+        expansions:
+          expansionIds && expansionIds.length > 0
+            ? { connect: expansionIds.map((id) => ({ id })) }
+            : undefined,
         scores: {
           create: scoresData.map((score) => ({
             playerId: score.playerId,
@@ -203,5 +219,13 @@ export class ResultsService {
     return this.prisma.pointCategory.findUnique({
       where: { id: pointCategoryId },
     });
+  }
+
+  async findExpansions(resultId: string): Promise<Expansion[]> {
+    const result = await this.prisma.result.findUnique({
+      where: { id: resultId },
+      include: { expansions: true },
+    });
+    return result?.expansions ?? [];
   }
 }
