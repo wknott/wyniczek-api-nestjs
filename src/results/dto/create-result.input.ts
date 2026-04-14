@@ -19,6 +19,18 @@ export class CreateScoreInput {
 }
 
 @InputType()
+export class CreateResultImageInput {
+  @Field()
+  url: string;
+
+  @Field()
+  key: string;
+
+  @Field(() => Int)
+  order: number;
+}
+
+@InputType()
 export class CreateResultInput {
   @Field()
   gameId: string;
@@ -34,4 +46,7 @@ export class CreateResultInput {
 
   @Field(() => [String], { nullable: true })
   expansionIds?: string[];
+
+  @Field(() => [CreateResultImageInput], { nullable: true })
+  images?: CreateResultImageInput[];
 }

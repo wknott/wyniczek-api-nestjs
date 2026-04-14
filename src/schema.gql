@@ -46,9 +46,16 @@ input CreatePointInput {
   value: Int
 }
 
+input CreateResultImageInput {
+  key: String!
+  order: Int!
+  url: String!
+}
+
 input CreateResultInput {
   expansionIds: [String!]
   gameId: String!
+  images: [CreateResultImageInput!]
   playingTime: Int
   scores: [CreateScoreInput!]!
   userId: String!
@@ -164,9 +171,18 @@ type Result {
   game: Game!
   gameId: String!
   id: String!
+  images: [ResultImage!]
   playingTime: Int
   scores: [Score!]
   userId: String!
+}
+
+type ResultImage {
+  id: String!
+  key: String!
+  order: Int!
+  resultId: String!
+  url: String!
 }
 
 type Score {
@@ -193,6 +209,7 @@ input UpdateResultInput {
   expansionIds: [String!]
   gameId: String
   id: String!
+  images: [CreateResultImageInput!]
   playingTime: Int
   scores: [CreateScoreInput!]
   userId: String

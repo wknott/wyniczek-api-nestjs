@@ -47,14 +47,24 @@ model PointCategory {
 }
 
 model Result {
-  id          String      @id @default(cuid())
-  game        Game        @relation(fields: [gameId], references: [id])
+  id          String        @id @default(cuid())
+  game        Game          @relation(fields: [gameId], references: [id])
   gameId      String
   scores      Score[]
   expansions  Expansion[]
-  createdAt   DateTime    @default(now())
+  images      ResultImage[]
+  createdAt   DateTime      @default(now())
   playingTime Int?
   userId      String
+}
+
+model ResultImage {
+  id       String @id @default(cuid())
+  result   Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  resultId String
+  url      String
+  key      String
+  order    Int    @default(0)
 }
 
 model Expansion {

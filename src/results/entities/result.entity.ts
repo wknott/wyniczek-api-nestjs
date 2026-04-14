@@ -2,6 +2,7 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { Game } from '../../games/entities/game.entity';
 import { Expansion } from '../../games/entities/expansion.entity';
 import { Score } from './score.entity';
+import { ResultImage } from './result-image.entity';
 
 @ObjectType()
 export class Result {
@@ -28,6 +29,9 @@ export class Result {
 
   @Field(() => [Expansion], { nullable: true })
   expansions?: Expansion[];
+
+  @Field(() => [ResultImage], { nullable: true })
+  images?: ResultImage[];
 }
 
 @ObjectType()

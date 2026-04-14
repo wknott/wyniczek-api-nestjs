@@ -8,6 +8,7 @@ import { Score } from './entities/score.entity';
 import { Player } from '../players/entities/player.entity';
 import { Point } from './entities/point.entity';
 import { PointCategory } from '../games/entities/point-category.entity';
+import { ResultImage } from './entities/result-image.entity';
 
 import { CreateResultInput, CreateScoreInput } from './dto/create-result.input';
 import { UpdateResultInput } from './dto/update-result.input';
@@ -41,7 +42,7 @@ export class ResultsService {
   }
 
   async create(createResultInput: CreateResultInput): Promise<Result> {
-    const { gameId, userId, scores, playingTime, expansionIds } =
+    const { gameId, userId, scores, playingTime, expansionIds, images } =
       createResultInput;
 
     const game = await this.prisma.game.findUnique({
@@ -74,6 +75,16 @@ export class ResultsService {
           expansionIds && expansionIds.length > 0
             ? { connect: expansionIds.map((id) => ({ id })) }
             : undefined,
+        images:
+          images && images.length > 0
+            ? {
+                create: images.map((img) => ({
+                  url: img.url,
+                  key: img.key,
+                  order: img.order,
+                })),
+              }
+            : undefined,
         scores: {
           create: scoresData.map((score) => ({
             playerId: score.playerId,
@@ -86,6 +97,13 @@ export class ResultsService {
           })),
         },
       },
+    });
+  }
+
+  async findImages(resultId: string): Promise<ResultImage[]> {
+    return this.prisma.resultImage.findMany({
+      where: { resultId },
+      orderBy: { order: 'asc' },
     });
   }
 
@@ -119,8 +137,16 @@ export class ResultsService {
     id: string,
     updateResultInput: UpdateResultInput,
   ): Promise<Result> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { scores, id: _, ...data } = updateResultInput;
+    const {
+      scores,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      id: _,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      expansionIds: _expansionIds,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      images: _images,
+      ...data
+    } = updateResultInput;
 
     if (scores) {
       let gameId = data.gameId;
