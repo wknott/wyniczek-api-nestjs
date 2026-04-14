@@ -6,4 +6,6 @@ async function bootstrap() {
   app.enableCors();
   await app.listen(3000);
 }
-bootstrap();
+bootstrap()
+  .then(() => console.log('Server started on port 3000'))
+  .catch((err) => console.error('Error starting server:', err));

@@ -5,14 +5,14 @@ import { BggService } from './bgg.service';
 import { BggResolver } from './bgg.resolver';
 
 @Module({
-    imports: [
-        HttpModule,
-        CacheModule.register({
-            ttl: 60 * 60 * 1000,
-            max: 100,
-        }),
-    ],
-    providers: [BggService, BggResolver],
-    exports: [BggService],
+  imports: [
+    HttpModule,
+    CacheModule.register({
+      ttl: 60 * 60 * 1000,
+      max: 100,
+    }),
+  ],
+  providers: [BggService, BggResolver],
+  exports: [BggService],
 })
-export class BggModule { }
+export class BggModule {}

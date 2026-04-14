@@ -9,7 +9,6 @@ import { ResultsModule } from './results/results.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { BggModule } from './bgg/bgg.module';
 
-
 @Module({
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -25,7 +24,6 @@ import { BggModule } from './bgg/bgg.module';
     ResultsModule,
     PrismaModule,
     BggModule,
-
   ],
 })
-export class AppModule { }
+export class AppModule {}

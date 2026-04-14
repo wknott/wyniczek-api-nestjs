@@ -2,36 +2,36 @@ import { InputType, Int, Field } from '@nestjs/graphql';
 
 @InputType()
 export class CreatePointInput {
-    @Field()
-    pointCategoryId: string;
+  @Field()
+  pointCategoryId: string;
 
-    @Field(() => Int, { nullable: true })
-    value?: number;
+  @Field(() => Int, { nullable: true })
+  value?: number;
 }
 
 @InputType()
 export class CreateScoreInput {
-    @Field()
-    playerId: string;
+  @Field()
+  playerId: string;
 
-    @Field(() => [CreatePointInput], { nullable: 'itemsAndList' })
-    points?: CreatePointInput[];
+  @Field(() => [CreatePointInput], { nullable: 'itemsAndList' })
+  points?: CreatePointInput[];
 }
 
 @InputType()
 export class CreateResultInput {
-    @Field()
-    gameId: string;
+  @Field()
+  gameId: string;
 
-    @Field()
-    userId: string;
+  @Field()
+  userId: string;
 
-    @Field(() => Int, { nullable: true })
-    playingTime?: number;
+  @Field(() => Int, { nullable: true })
+  playingTime?: number;
 
-    @Field(() => [CreateScoreInput])
-    scores: CreateScoreInput[];
+  @Field(() => [CreateScoreInput])
+  scores: CreateScoreInput[];
 
-    @Field(() => [String], { nullable: true })
-    expansionIds?: string[];
+  @Field(() => [String], { nullable: true })
+  expansionIds?: string[];
 }

@@ -3,18 +3,18 @@ import { PointCategory } from '../../games/entities/point-category.entity';
 
 @ObjectType()
 export class Point {
-    @Field(() => String)
-    id: string;
+  @Field(() => String)
+  id: string;
 
-    @Field(() => String)
-    scoreId: string;
+  @Field(() => String)
+  scoreId: string;
 
-    @Field(() => String)
-    pointCategoryId: string;
+  @Field(() => String)
+  pointCategoryId: string;
 
-    @Field(() => Int, { nullable: true })
-    value?: number | null;
+  @Field(() => Int, { nullable: true })
+  value?: number | null;
 
-    @Field(() => PointCategory)
-    pointCategory?: PointCategory;
+  @Field(() => PointCategory)
+  pointCategory?: PointCategory;
 }

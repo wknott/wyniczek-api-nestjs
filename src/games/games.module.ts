@@ -5,6 +5,6 @@ import { BggModule } from '../bgg/bgg.module';
 
 @Module({
   imports: [BggModule],
-  providers: [GamesService, GamesResolver]
+  providers: [GamesService, GamesResolver],
 })
-export class GamesModule { }
+export class GamesModule {}

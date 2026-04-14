@@ -42,7 +42,7 @@ export class GamesService {
         });
         break;
 
-      case GameSortBy.LAST_PLAYED:
+      case GameSortBy.LAST_PLAYED: {
         const gamesWithLatestResult = await this.prisma.game.findMany({
           where: whereClause,
           include: {
@@ -61,10 +61,12 @@ export class GamesService {
         });
 
         items = sorted.slice(skip, skip + take).map((game) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { results, ...gameWithoutResults } = game;
           return gameWithoutResults as Game;
         });
         break;
+      }
 
       case GameSortBy.AVG_PLAYING_TIME_2P: {
         const allGames = await this.prisma.game.findMany({
@@ -201,7 +203,10 @@ export class GamesService {
         pointCategories: {
           create:
             pointCategoryNames && pointCategoryNames.length > 0
-              ? pointCategoryNames.map((name, index) => ({ name, order: index }))
+              ? pointCategoryNames.map((name, index) => ({
+                  name,
+                  order: index,
+                }))
               : [{ name: 'Punkty', order: 0 }],
         },
       },
@@ -312,7 +317,7 @@ export class GamesService {
 
         const toCreate = categories.filter((c) => !c.id);
         const toUpdate = categories.filter(
-          (c) => c.id && existingMap.has(c.id!),
+          (c) => c.id && existingMap.has(c.id),
         );
         const toUpdateIds = new Set(toUpdate.map((c) => c.id));
         const toDelete = existingCategories.filter(
@@ -367,23 +372,23 @@ export class GamesService {
         where: { gameId },
       });
       const existingCategoriesMap = new Map(
-        existingCategories.map((c: any) => [c.id, c]),
+        existingCategories.map((c) => [c.id, c]),
       );
 
-      const categoriesToCreate = categories.filter((c: any) => !c.id);
+      const categoriesToCreate = categories.filter((c) => !c.id);
       const categoriesToUpdate = categories.filter(
-        (c: any) => c.id && existingCategoriesMap.has(c.id),
+        (c) => c.id && existingCategoriesMap.has(c.id),
       );
       const categoriesToUpdateIds = new Set(
-        categoriesToUpdate.map((c: any) => c.id),
+        categoriesToUpdate.map((c) => c.id),
       );
       const categoriesToDelete = existingCategories.filter(
-        (c: any) => !categoriesToUpdateIds.has(c.id),
+        (c) => !categoriesToUpdateIds.has(c.id),
       );
 
       if (categoriesToDelete.length > 0) {
         await tx.pointCategory.deleteMany({
-          where: { id: { in: categoriesToDelete.map((c: any) => c.id) } },
+          where: { id: { in: categoriesToDelete.map((c) => c.id) } },
         });
       }
 
@@ -398,7 +403,7 @@ export class GamesService {
 
       if (categoriesToCreate.length > 0) {
         await tx.pointCategory.createMany({
-          data: categoriesToCreate.map((c: any) => ({
+          data: categoriesToCreate.map((c) => ({
             name: c.name,
             order: c.order,
             gameId,

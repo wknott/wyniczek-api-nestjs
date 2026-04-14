@@ -119,6 +119,7 @@ export class ResultsService {
     id: string,
     updateResultInput: UpdateResultInput,
   ): Promise<Result> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { scores, id: _, ...data } = updateResultInput;
 
     if (scores) {

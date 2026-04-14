@@ -5,27 +5,27 @@ import { Player } from './entities/player.entity';
 
 @Injectable()
 export class PlayersService {
-    constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-    async findAll(): Promise<Player[]> {
-        return this.prisma.player.findMany();
-    }
+  async findAll(): Promise<Player[]> {
+    return this.prisma.player.findMany();
+  }
 
-    async findOne(id: string): Promise<Player | null> {
-        return this.prisma.player.findUnique({
-            where: { id },
-        });
-    }
+  async findOne(id: string): Promise<Player | null> {
+    return this.prisma.player.findUnique({
+      where: { id },
+    });
+  }
 
-    async create(data: { name: string; userId: string }): Promise<Player> {
-        return this.prisma.player.create({
-            data,
-        });
-    }
+  async create(data: { name: string; userId: string }): Promise<Player> {
+    return this.prisma.player.create({
+      data,
+    });
+  }
 
-    async remove(id: string): Promise<Player> {
-        return this.prisma.player.delete({
-            where: { id },
-        });
-    }
+  async remove(id: string): Promise<Player> {
+    return this.prisma.player.delete({
+      where: { id },
+    });
+  }
 }
