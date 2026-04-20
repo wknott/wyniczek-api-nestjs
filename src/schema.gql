@@ -142,7 +142,16 @@ type PaginatedResults {
 type Player {
   id: String!
   name: String!
+  records: [PlayerRecord!]!
   userId: String!
+}
+
+type PlayerRecord {
+  createdAt: DateTime!
+  expansions: [Expansion!]!
+  game: Game!
+  resultId: String!
+  totalPoints: Int!
 }
 
 type Point {

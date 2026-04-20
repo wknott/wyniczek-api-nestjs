@@ -1,6 +1,14 @@
-import { Resolver, Query, Args, Mutation } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Args,
+  Mutation,
+  ResolveField,
+  Parent,
+} from '@nestjs/graphql';
 import { PlayersService } from './players.service';
 import { Player } from './entities/player.entity';
+import { PlayerRecord } from './entities/player-record.entity';
 import { CreatePlayerInput } from './dto/create-player.input';
 
 @Resolver(() => Player)
@@ -27,5 +35,10 @@ export class PlayersResolver {
   @Mutation(() => Player)
   removePlayer(@Args('id', { type: () => String }) id: string) {
     return this.playersService.remove(id);
+  }
+
+  @ResolveField(() => [PlayerRecord])
+  records(@Parent() player: Player) {
+    return this.playersService.findRecordsByPlayerId(player.id);
   }
 }
