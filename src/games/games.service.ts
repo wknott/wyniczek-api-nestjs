@@ -4,6 +4,7 @@ import { BggService } from '../bgg/bgg.service';
 
 import { Game, GameSortBy } from './entities/game.entity';
 import { Expansion } from './entities/expansion.entity';
+import { GameRecord } from './entities/game-record.entity';
 import { CreateGameInput } from './dto/create-game.input';
 import { UpdatePointCategoryInput } from './dto/update-game-categories.input';
 import { CreateExpansionInput } from './dto/create-expansion.input';
@@ -361,6 +362,61 @@ export class GamesService {
       data: { deletedAt: new Date() },
       include: { pointCategories: { orderBy: { order: 'asc' } } },
     });
+  }
+
+  async findRecordsByGameId(gameId: string): Promise<GameRecord[]> {
+    const results = await this.prisma.result.findMany({
+      where: { gameId },
+      include: {
+        expansions: { where: { deletedAt: null } },
+        scores: { include: { points: true, player: true } },
+      },
+    });
+
+    const groups = new Map<
+      string,
+      { expansions: Expansion[]; best: GameRecord | null }
+    >();
+
+    for (const result of results) {
+      const sortedExpansions = [...result.expansions].sort((a, b) =>
+        a.id.localeCompare(b.id),
+      );
+      const key = sortedExpansions.map((e) => e.id).join(',');
+
+      if (!groups.has(key)) {
+        groups.set(key, { expansions: sortedExpansions, best: null });
+      }
+      const group = groups.get(key)!;
+
+      for (const score of result.scores) {
+        const total = score.points.reduce(
+          (sum, p) => sum + (p.value ?? 0),
+          0,
+        );
+        if (!group.best || total > group.best.totalPoints) {
+          group.best = {
+            expansions: group.expansions,
+            totalPoints: total,
+            resultId: result.id,
+            player: score.player,
+            createdAt: result.createdAt,
+          };
+        }
+      }
+    }
+
+    return [...groups.values()]
+      .map((g) => g.best!)
+      .filter((r) => r !== null && r.totalPoints > 0)
+      .sort((a, b) => {
+        const lenDiff = a.expansions.length - b.expansions.length;
+        if (lenDiff !== 0) return lenDiff;
+        return a.expansions
+          .map((e) => e.name)
+          .join()
+          .localeCompare(b.expansions.map((e) => e.name).join());
+      });
   }
 
   async updateGameCategories(
