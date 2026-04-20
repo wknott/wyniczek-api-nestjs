@@ -32,6 +32,29 @@ export class PlayersService {
     });
   }
 
+  async findTotalWinsByPlayerId(playerId: string): Promise<number> {
+    const results = await this.prisma.result.findMany({
+      where: { scores: { some: { playerId } } },
+      include: { scores: { include: { points: true } } },
+    });
+
+    let wins = 0;
+    for (const result of results) {
+      if (result.scores.length === 0) continue;
+
+      const totals = result.scores.map((s) => ({
+        playerId: s.playerId,
+        total: s.points.reduce((sum, p) => sum + (p.value ?? 0), 0),
+      }));
+
+      const maxTotal = Math.max(...totals.map((t) => t.total));
+      const playerScore = totals.find((t) => t.playerId === playerId);
+      if (playerScore && playerScore.total === maxTotal) wins++;
+    }
+
+    return wins;
+  }
+
   async findRecordsByPlayerId(playerId: string): Promise<PlayerRecord[]> {
     const scores = await this.prisma.score.findMany({
       where: { playerId },

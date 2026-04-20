@@ -92,10 +92,17 @@ type Game {
   maxPlayers: Int!
   minPlayers: Int!
   name: String!
+  playerStats: [GamePlayerStats!]!
   pointCategories: [PointCategory!]
   records: [GameRecord!]!
   thumbnailUrl: String
   userId: String!
+}
+
+type GamePlayerStats {
+  player: Player!
+  totalGames: Int!
+  wins: Int!
 }
 
 type GameRecord {
@@ -143,6 +150,7 @@ type Player {
   id: String!
   name: String!
   records: [PlayerRecord!]!
+  totalWins: Int!
   userId: String!
 }
 

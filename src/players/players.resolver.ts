@@ -5,6 +5,7 @@ import {
   Mutation,
   ResolveField,
   Parent,
+  Int,
 } from '@nestjs/graphql';
 import { PlayersService } from './players.service';
 import { Player } from './entities/player.entity';
@@ -40,5 +41,10 @@ export class PlayersResolver {
   @ResolveField(() => [PlayerRecord])
   records(@Parent() player: Player) {
     return this.playersService.findRecordsByPlayerId(player.id);
+  }
+
+  @ResolveField(() => Int)
+  totalWins(@Parent() player: Player) {
+    return this.playersService.findTotalWinsByPlayerId(player.id);
   }
 }

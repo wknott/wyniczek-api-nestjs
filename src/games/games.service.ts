@@ -5,6 +5,7 @@ import { BggService } from '../bgg/bgg.service';
 import { Game, GameSortBy } from './entities/game.entity';
 import { Expansion } from './entities/expansion.entity';
 import { GameRecord } from './entities/game-record.entity';
+import { GamePlayerStats } from './entities/game-player-stats.entity';
 import { CreateGameInput } from './dto/create-game.input';
 import { UpdatePointCategoryInput } from './dto/update-game-categories.input';
 import { CreateExpansionInput } from './dto/create-expansion.input';
@@ -390,10 +391,7 @@ export class GamesService {
       const group = groups.get(key)!;
 
       for (const score of result.scores) {
-        const total = score.points.reduce(
-          (sum, p) => sum + (p.value ?? 0),
-          0,
-        );
+        const total = score.points.reduce((sum, p) => sum + (p.value ?? 0), 0);
         if (!group.best || total > group.best.totalPoints) {
           group.best = {
             expansions: group.expansions,
@@ -417,6 +415,57 @@ export class GamesService {
           .join()
           .localeCompare(b.expansions.map((e) => e.name).join());
       });
+  }
+
+  async findPlayerStatsByGameId(gameId: string): Promise<GamePlayerStats[]> {
+    const results = await this.prisma.result.findMany({
+      where: { gameId },
+      include: {
+        scores: { include: { points: true, player: true } },
+      },
+    });
+
+    const statsByPlayer = new Map<
+      string,
+      { player: GamePlayerStats['player']; wins: number; totalGames: number }
+    >();
+
+    for (const result of results) {
+      if (result.scores.length === 0) continue;
+
+      const totals = result.scores.map((score) => ({
+        score,
+        total: score.points.reduce((sum, p) => sum + (p.value ?? 0), 0),
+      }));
+
+      const maxTotal = Math.max(...totals.map((t) => t.total));
+
+      for (const { score } of totals) {
+        if (!statsByPlayer.has(score.playerId)) {
+          statsByPlayer.set(score.playerId, {
+            player: score.player,
+            wins: 0,
+            totalGames: 0,
+          });
+        }
+        statsByPlayer.get(score.playerId)!.totalGames++;
+      }
+
+      for (const { score, total } of totals) {
+        if (total === maxTotal) {
+          statsByPlayer.get(score.playerId)!.wins++;
+        }
+      }
+    }
+
+    return [...statsByPlayer.values()]
+      .filter((s) => s.totalGames > 0)
+      .sort(
+        (a, b) =>
+          b.wins - a.wins ||
+          b.totalGames - a.totalGames ||
+          a.player.name.localeCompare(b.player.name),
+      );
   }
 
   async updateGameCategories(

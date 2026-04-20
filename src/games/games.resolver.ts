@@ -11,6 +11,7 @@ import { GamesService } from './games.service';
 import { Game, PaginatedGames, GameSortBy } from './entities/game.entity';
 import { Expansion } from './entities/expansion.entity';
 import { GameRecord } from './entities/game-record.entity';
+import { GamePlayerStats } from './entities/game-player-stats.entity';
 import { Result } from '../results/entities/result.entity';
 import { CreateGameInput } from './dto/create-game.input';
 import { UpdatePointCategoryInput } from './dto/update-game-categories.input';
@@ -107,6 +108,11 @@ export class GamesResolver {
   @ResolveField(() => [GameRecord])
   records(@Parent() game: Game) {
     return this.gamesService.findRecordsByGameId(game.id);
+  }
+
+  @ResolveField(() => [GamePlayerStats])
+  playerStats(@Parent() game: Game) {
+    return this.gamesService.findPlayerStatsByGameId(game.id);
   }
 
   @Mutation(() => Expansion)
