@@ -276,6 +276,16 @@ export class GamesService {
     });
   }
 
+  async updateGameManualUrl(gameId: string, url: string | null): Promise<Game> {
+    return this.prisma.game.update({
+      where: { id: gameId },
+      data: { manualUrl: url },
+      include: {
+        pointCategories: { orderBy: { order: 'asc' } },
+      },
+    });
+  }
+
   async findExpansionsByGameId(gameId: string): Promise<Expansion[]> {
     return this.prisma.expansion.findMany({
       where: { gameId, deletedAt: null },

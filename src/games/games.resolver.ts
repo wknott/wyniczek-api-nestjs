@@ -84,6 +84,14 @@ export class GamesResolver {
   }
 
   @Mutation(() => Game)
+  updateGameManualUrl(
+    @Args('id', { type: () => String }) id: string,
+    @Args('url', { type: () => String, nullable: true }) url: string | null,
+  ) {
+    return this.gamesService.updateGameManualUrl(id, url);
+  }
+
+  @Mutation(() => Game)
   updateGameCollectionStatus(
     @Args('id', { type: () => String }) id: string,
     @Args('inCollection', { type: () => Boolean }) inCollection: boolean,

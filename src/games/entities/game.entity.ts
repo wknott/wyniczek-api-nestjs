@@ -53,6 +53,9 @@ export class Game {
   @Field(() => String, { nullable: true })
   thumbnailUrl?: string | null;
 
+  @Field(() => String, { nullable: true })
+  manualUrl?: string | null;
+
   @Field(() => String)
   userId: string;
 

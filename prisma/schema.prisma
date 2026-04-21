@@ -29,6 +29,7 @@ model Game {
   bggWeight       Float?
   imgUrl          String?
   thumbnailUrl    String?
+  manualUrl       String?
   results         Result[]
   userId          String
 

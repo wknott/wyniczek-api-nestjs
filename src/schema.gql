@@ -89,6 +89,7 @@ type Game {
   inCollection: Boolean!
   lastPlayedAt: DateTime
   latestResult: Result
+  manualUrl: String
   maxPlayers: Int!
   minPlayers: Int!
   name: String!
@@ -133,6 +134,7 @@ type Mutation {
   updateExpansion(updateExpansionInput: UpdateExpansionInput!): Expansion!
   updateGameCategories(categories: [UpdatePointCategoryInput!]!, id: String!): Game!
   updateGameCollectionStatus(id: String!, inCollection: Boolean!): Game!
+  updateGameManualUrl(id: String!, url: String): Game!
   updateResult(updateResultInput: UpdateResultInput!): Result!
 }
 
