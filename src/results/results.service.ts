@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 import { Result } from './entities/result.entity';
@@ -41,24 +41,30 @@ export class ResultsService {
     });
   }
 
-  async create(createResultInput: CreateResultInput): Promise<Result> {
-    const { gameId, userId, scores, playingTime, expansionIds, images } =
+  async create(
+    createResultInput: CreateResultInput,
+    userId: string,
+  ): Promise<Result> {
+    const { gameId, scores, playingTime, expansionIds, images } =
       createResultInput;
 
-    const game = await this.prisma.game.findUnique({
-      where: { id: gameId },
+    const game = await this.prisma.game.findFirst({
+      where: { id: gameId, userId },
       include: { pointCategories: { orderBy: { order: 'asc' } } },
     });
 
     if (!game) {
-      throw new Error(`Game with ID ${gameId} not found`);
+      throw new NotFoundException(`Gra o ID ${gameId} nie została znaleziona`);
     }
 
     let allCategories: { id: string }[] = [...game.pointCategories];
 
     if (expansionIds && expansionIds.length > 0) {
       const expansionCategories = await this.prisma.pointCategory.findMany({
-        where: { expansionId: { in: expansionIds } },
+        where: {
+          expansionId: { in: expansionIds },
+          expansion: { game: { userId } },
+        },
         orderBy: { order: 'asc' },
       });
       allCategories = [...allCategories, ...expansionCategories];
@@ -108,11 +114,12 @@ export class ResultsService {
   }
 
   async findAll(
+    userId: string,
     skip: number = 0,
     take: number = 10,
     gameId?: string,
   ): Promise<{ items: Result[]; total: number }> {
-    const where = gameId ? { gameId } : {};
+    const where = gameId ? { userId, gameId } : { userId };
 
     const [items, total] = await Promise.all([
       this.prisma.result.findMany({
@@ -127,16 +134,25 @@ export class ResultsService {
     return { items, total };
   }
 
-  async findOne(id: string): Promise<Result | null> {
-    return this.prisma.result.findUnique({
-      where: { id },
+  async findOne(id: string, userId: string): Promise<Result | null> {
+    return this.prisma.result.findFirst({
+      where: { id, userId },
     });
   }
 
   async update(
     id: string,
     updateResultInput: UpdateResultInput,
+    userId: string,
   ): Promise<Result> {
+    const existing = await this.prisma.result.findFirst({
+      where: { id, userId },
+      select: { id: true, gameId: true },
+    });
+    if (!existing) {
+      throw new NotFoundException('Wynik nie został znaleziony');
+    }
+
     const {
       scores,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -149,19 +165,12 @@ export class ResultsService {
     } = updateResultInput;
 
     if (scores) {
-      let gameId = data.gameId;
-      if (!gameId) {
-        const currentResult = await this.prisma.result.findUnique({
-          where: { id },
-          select: { gameId: true },
-        });
-        if (currentResult) gameId = currentResult.gameId;
-      }
+      const gameId = data.gameId ?? existing.gameId;
 
       let gameCategories: { id: string }[] = [];
       if (gameId) {
-        const game = await this.prisma.game.findUnique({
-          where: { id: gameId },
+        const game = await this.prisma.game.findFirst({
+          where: { id: gameId, userId },
           include: { pointCategories: { orderBy: { order: 'asc' } } },
         });
         if (game) gameCategories = game.pointCategories;
@@ -194,15 +203,26 @@ export class ResultsService {
     });
   }
 
-  async remove(id: string): Promise<Result> {
+  async remove(id: string, userId: string): Promise<Result> {
+    const existing = await this.prisma.result.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new NotFoundException('Wynik nie został znaleziony');
+    }
     return this.prisma.result.delete({
       where: { id },
     });
   }
 
-  async findLatestByGameName(gameName: string): Promise<Result | null> {
+  async findLatestByGameName(
+    gameName: string,
+    userId: string,
+  ): Promise<Result | null> {
     return this.prisma.result.findFirst({
       where: {
+        userId,
         game: {
           name: {
             contains: gameName,
@@ -215,9 +235,9 @@ export class ResultsService {
     });
   }
 
-  async findGame(gameId: string): Promise<Game | null> {
-    return this.prisma.game.findUnique({
-      where: { id: gameId },
+  async findGame(gameId: string, userId: string): Promise<Game | null> {
+    return this.prisma.game.findFirst({
+      where: { id: gameId, userId },
       include: { pointCategories: { orderBy: { order: 'asc' } } },
     });
   }
@@ -228,9 +248,9 @@ export class ResultsService {
     });
   }
 
-  async findPlayer(playerId: string): Promise<Player | null> {
-    return this.prisma.player.findUnique({
-      where: { id: playerId },
+  async findPlayer(playerId: string, userId: string): Promise<Player | null> {
+    return this.prisma.player.findFirst({
+      where: { id: playerId, userId },
     });
   }
 

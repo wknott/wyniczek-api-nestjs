@@ -8,9 +8,6 @@ export class CreateGameInput {
   @Field(() => Int, { nullable: true })
   bggId?: number;
 
-  @Field(() => String)
-  userId: string;
-
   @Field(() => Boolean, { nullable: true, defaultValue: true })
   inCollection?: boolean;
 

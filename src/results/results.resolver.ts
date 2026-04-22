@@ -18,6 +18,7 @@ import { Expansion } from '../games/entities/expansion.entity';
 import { ResultImage } from './entities/result-image.entity';
 import { CreateResultInput } from './dto/create-result.input';
 import { UpdateResultInput } from './dto/update-result.input';
+import { CurrentUser } from '../auth/current-user.decorator';
 
 @Resolver(() => Result)
 export class ResultsResolver {
@@ -26,48 +27,62 @@ export class ResultsResolver {
   @Mutation(() => Result)
   createResult(
     @Args('createResultInput') createResultInput: CreateResultInput,
+    @CurrentUser() userId: string,
   ) {
-    return this.resultsService.create(createResultInput);
+    return this.resultsService.create(createResultInput, userId);
   }
 
   @Mutation(() => Result)
   updateResult(
     @Args('updateResultInput') updateResultInput: UpdateResultInput,
+    @CurrentUser() userId: string,
   ) {
-    return this.resultsService.update(updateResultInput.id, updateResultInput);
+    return this.resultsService.update(
+      updateResultInput.id,
+      updateResultInput,
+      userId,
+    );
   }
 
   @Mutation(() => Result)
-  removeResult(@Args('id', { type: () => String }) id: string) {
-    return this.resultsService.remove(id);
+  removeResult(
+    @Args('id', { type: () => String }) id: string,
+    @CurrentUser() userId: string,
+  ) {
+    return this.resultsService.remove(id, userId);
   }
 
   @Query(() => PaginatedResults, { name: 'results' })
   findAll(
+    @CurrentUser() userId: string,
     @Args('skip', { type: () => Int, nullable: true, defaultValue: 0 })
     skip: number,
     @Args('take', { type: () => Int, nullable: true, defaultValue: 10 })
     take: number,
     @Args('gameId', { type: () => String, nullable: true }) gameId?: string,
   ) {
-    return this.resultsService.findAll(skip, take, gameId);
+    return this.resultsService.findAll(userId, skip, take, gameId);
   }
 
   @Query(() => Result, { name: 'result', nullable: true })
-  findOne(@Args('id', { type: () => String }) id: string) {
-    return this.resultsService.findOne(id);
+  findOne(
+    @Args('id', { type: () => String }) id: string,
+    @CurrentUser() userId: string,
+  ) {
+    return this.resultsService.findOne(id, userId);
   }
 
   @Query(() => Result, { name: 'latestResultByGameName', nullable: true })
   findLatestByGameName(
     @Args('gameName', { type: () => String }) gameName: string,
+    @CurrentUser() userId: string,
   ) {
-    return this.resultsService.findLatestByGameName(gameName);
+    return this.resultsService.findLatestByGameName(gameName, userId);
   }
 
   @ResolveField(() => Game)
-  game(@Parent() result: Result) {
-    return this.resultsService.findGame(result.gameId);
+  game(@Parent() result: Result, @CurrentUser() userId: string) {
+    return this.resultsService.findGame(result.gameId, userId);
   }
 
   @ResolveField(() => [Score])
@@ -91,8 +106,8 @@ export class ScoreResolver {
   constructor(private readonly resultsService: ResultsService) {}
 
   @ResolveField(() => Player)
-  player(@Parent() score: Score) {
-    return this.resultsService.findPlayer(score.playerId);
+  player(@Parent() score: Score, @CurrentUser() userId: string) {
+    return this.resultsService.findPlayer(score.playerId, userId);
   }
 
   @ResolveField(() => [Point])

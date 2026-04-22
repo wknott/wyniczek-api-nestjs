@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BggService } from '../bgg/bgg.service';
 
@@ -19,12 +19,15 @@ export class GamesService {
   ) {}
 
   async findAll(
+    userId: string,
     skip: number = 0,
     take: number = 10,
     sortBy: GameSortBy = GameSortBy.POPULARITY,
     includeNotInCollection: boolean = false,
   ): Promise<{ items: Game[]; total: number }> {
-    const whereClause = includeNotInCollection ? {} : { inCollection: true };
+    const whereClause = includeNotInCollection
+      ? { userId }
+      : { userId, inCollection: true };
     const total = await this.prisma.game.count({ where: whereClause });
 
     let items: Game[];
@@ -129,10 +132,14 @@ export class GamesService {
       : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
   }
 
-  async getAvgPlayingTime2Players(gameId: string): Promise<number | null> {
+  async getAvgPlayingTime2Players(
+    gameId: string,
+    userId: string,
+  ): Promise<number | null> {
     const results = await this.prisma.result.findMany({
       where: {
         gameId,
+        userId,
         playingTime: { not: null },
       },
       include: {
@@ -147,23 +154,26 @@ export class GamesService {
     return times.length > 0 ? this.median(times) : null;
   }
 
-  async findLatestResult(gameId: string) {
+  async findLatestResult(gameId: string, userId: string) {
     return this.prisma.result.findFirst({
-      where: { gameId },
+      where: { gameId, userId },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findOne(id: string): Promise<Game | null> {
-    return this.prisma.game.findUnique({
-      where: { id },
+  async findOne(id: string, userId: string): Promise<Game | null> {
+    return this.prisma.game.findFirst({
+      where: { id, userId },
       include: {
         pointCategories: { orderBy: { order: 'asc' } },
       },
     });
   }
 
-  async create(createGameInput: CreateGameInput): Promise<Game> {
+  async create(
+    createGameInput: CreateGameInput,
+    userId: string,
+  ): Promise<Game> {
     const { pointCategoryNames, ...gameData } = createGameInput;
     let additionalData: {
       bggRank?: number;
@@ -202,6 +212,7 @@ export class GamesService {
       data: {
         ...gameData,
         ...additionalData,
+        userId,
         pointCategories: {
           create:
             pointCategoryNames && pointCategoryNames.length > 0
@@ -218,10 +229,12 @@ export class GamesService {
     });
   }
 
-  async syncGameWithBgg(gameId: string): Promise<Game> {
-    const game = await this.prisma.game.findUnique({ where: { id: gameId } });
+  async syncGameWithBgg(gameId: string, userId: string): Promise<Game> {
+    const game = await this.prisma.game.findFirst({
+      where: { id: gameId, userId },
+    });
     if (!game) {
-      throw new Error('Game not found');
+      throw new NotFoundException('Gra nie została znaleziona');
     }
 
     if (!game.bggId) {
@@ -242,9 +255,10 @@ export class GamesService {
     });
   }
 
-  async syncAllGamesWithBgg(): Promise<Game[]> {
+  async syncAllGamesWithBgg(userId: string): Promise<Game[]> {
     const games = await this.prisma.game.findMany({
       where: {
+        userId,
         bggId: { not: null },
       },
     });
@@ -253,7 +267,7 @@ export class GamesService {
 
     for (const game of games) {
       try {
-        const updated = await this.syncGameWithBgg(game.id);
+        const updated = await this.syncGameWithBgg(game.id, userId);
         updatedGames.push(updated);
       } catch (e) {
         console.error(`Failed to sync game ${game.id} (${game.name}):`, e);
@@ -266,7 +280,9 @@ export class GamesService {
   async updateCollectionStatus(
     gameId: string,
     inCollection: boolean,
+    userId: string,
   ): Promise<Game> {
+    await this.assertGameOwnership(gameId, userId);
     return this.prisma.game.update({
       where: { id: gameId },
       data: { inCollection },
@@ -276,7 +292,12 @@ export class GamesService {
     });
   }
 
-  async updateGameManualUrl(gameId: string, url: string | null): Promise<Game> {
+  async updateGameManualUrl(
+    gameId: string,
+    url: string | null,
+    userId: string,
+  ): Promise<Game> {
+    await this.assertGameOwnership(gameId, userId);
     return this.prisma.game.update({
       where: { id: gameId },
       data: { manualUrl: url },
@@ -286,15 +307,22 @@ export class GamesService {
     });
   }
 
-  async findExpansionsByGameId(gameId: string): Promise<Expansion[]> {
+  async findExpansionsByGameId(
+    gameId: string,
+    userId: string,
+  ): Promise<Expansion[]> {
     return this.prisma.expansion.findMany({
-      where: { gameId, deletedAt: null },
+      where: { gameId, deletedAt: null, game: { userId } },
       include: { pointCategories: { orderBy: { order: 'asc' } } },
     });
   }
 
-  async createExpansion(input: CreateExpansionInput): Promise<Expansion> {
+  async createExpansion(
+    input: CreateExpansionInput,
+    userId: string,
+  ): Promise<Expansion> {
     const { gameId, name, pointCategoryNames } = input;
+    await this.assertGameOwnership(gameId, userId);
     return this.prisma.expansion.create({
       data: {
         gameId,
@@ -313,8 +341,12 @@ export class GamesService {
     });
   }
 
-  async updateExpansion(input: UpdateExpansionInput): Promise<Expansion> {
+  async updateExpansion(
+    input: UpdateExpansionInput,
+    userId: string,
+  ): Promise<Expansion> {
     const { id, name, categories } = input;
+    await this.assertExpansionOwnership(id, userId);
 
     return this.prisma.$transaction(async (tx) => {
       if (name !== undefined) {
@@ -367,7 +399,8 @@ export class GamesService {
     });
   }
 
-  async deleteExpansion(id: string): Promise<Expansion> {
+  async deleteExpansion(id: string, userId: string): Promise<Expansion> {
+    await this.assertExpansionOwnership(id, userId);
     return this.prisma.expansion.update({
       where: { id },
       data: { deletedAt: new Date() },
@@ -375,9 +408,12 @@ export class GamesService {
     });
   }
 
-  async findRecordsByGameId(gameId: string): Promise<GameRecord[]> {
+  async findRecordsByGameId(
+    gameId: string,
+    userId: string,
+  ): Promise<GameRecord[]> {
     const results = await this.prisma.result.findMany({
-      where: { gameId },
+      where: { gameId, userId },
       include: {
         expansions: { where: { deletedAt: null } },
         scores: { include: { points: true, player: true } },
@@ -427,9 +463,12 @@ export class GamesService {
       });
   }
 
-  async findPlayerStatsByGameId(gameId: string): Promise<GamePlayerStats[]> {
+  async findPlayerStatsByGameId(
+    gameId: string,
+    userId: string,
+  ): Promise<GamePlayerStats[]> {
     const results = await this.prisma.result.findMany({
-      where: { gameId },
+      where: { gameId, userId },
       include: {
         scores: { include: { points: true, player: true } },
       },
@@ -481,7 +520,9 @@ export class GamesService {
   async updateGameCategories(
     gameId: string,
     categories: UpdatePointCategoryInput[],
+    userId: string,
   ): Promise<Game> {
+    await this.assertGameOwnership(gameId, userId);
     return this.prisma.$transaction(async (tx) => {
       const existingCategories = await tx.pointCategory.findMany({
         where: { gameId },
@@ -532,10 +573,36 @@ export class GamesService {
       });
 
       if (!game) {
-        throw new Error('Game not found');
+        throw new NotFoundException('Gra nie została znaleziona');
       }
 
       return game;
     });
+  }
+
+  private async assertGameOwnership(
+    gameId: string,
+    userId: string,
+  ): Promise<void> {
+    const game = await this.prisma.game.findFirst({
+      where: { id: gameId, userId },
+      select: { id: true },
+    });
+    if (!game) {
+      throw new NotFoundException('Gra nie została znaleziona');
+    }
+  }
+
+  private async assertExpansionOwnership(
+    expansionId: string,
+    userId: string,
+  ): Promise<void> {
+    const expansion = await this.prisma.expansion.findFirst({
+      where: { id: expansionId, game: { userId } },
+      select: { id: true },
+    });
+    if (!expansion) {
+      throw new NotFoundException('Dodatek nie został znaleziony');
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 import { Player } from './entities/player.entity';
@@ -10,13 +10,13 @@ import { Game } from '../games/entities/game.entity';
 export class PlayersService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(): Promise<Player[]> {
-    return this.prisma.player.findMany();
+  async findAll(userId: string): Promise<Player[]> {
+    return this.prisma.player.findMany({ where: { userId } });
   }
 
-  async findOne(id: string): Promise<Player | null> {
-    return this.prisma.player.findUnique({
-      where: { id },
+  async findOne(id: string, userId: string): Promise<Player | null> {
+    return this.prisma.player.findFirst({
+      where: { id, userId },
     });
   }
 
@@ -26,15 +26,24 @@ export class PlayersService {
     });
   }
 
-  async remove(id: string): Promise<Player> {
+  async remove(id: string, userId: string): Promise<Player> {
+    const player = await this.prisma.player.findFirst({
+      where: { id, userId },
+    });
+    if (!player) {
+      throw new NotFoundException('Gracz nie został znaleziony');
+    }
     return this.prisma.player.delete({
       where: { id },
     });
   }
 
-  async findTotalWinsByPlayerId(playerId: string): Promise<number> {
+  async findTotalWinsByPlayerId(
+    playerId: string,
+    userId: string,
+  ): Promise<number> {
     const results = await this.prisma.result.findMany({
-      where: { scores: { some: { playerId } } },
+      where: { userId, scores: { some: { playerId } } },
       include: { scores: { include: { points: true } } },
     });
 
@@ -55,9 +64,12 @@ export class PlayersService {
     return wins;
   }
 
-  async findRecordsByPlayerId(playerId: string): Promise<PlayerRecord[]> {
+  async findRecordsByPlayerId(
+    playerId: string,
+    userId: string,
+  ): Promise<PlayerRecord[]> {
     const scores = await this.prisma.score.findMany({
-      where: { playerId },
+      where: { playerId, result: { userId } },
       include: {
         points: true,
         result: {

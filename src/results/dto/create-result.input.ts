@@ -35,9 +35,6 @@ export class CreateResultInput {
   @Field()
   gameId: string;
 
-  @Field()
-  userId: string;
-
   @Field(() => Int, { nullable: true })
   playingTime?: number;
 
