@@ -230,12 +230,11 @@ export class GamesService {
   }
 
   async syncGameWithBgg(gameId: string, userId: string): Promise<Game> {
-    const game = await this.prisma.game.findFirst({
-      where: { id: gameId, userId },
+    await this.assertGameOwnership(gameId, userId);
+    const game = await this.prisma.game.findUniqueOrThrow({
+      where: { id: gameId },
+      select: { bggId: true },
     });
-    if (!game) {
-      throw new NotFoundException('Gra nie została znaleziona');
-    }
 
     if (!game.bggId) {
       throw new Error('Game does not have a BGG ID');

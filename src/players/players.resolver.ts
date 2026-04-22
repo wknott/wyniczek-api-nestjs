@@ -35,7 +35,7 @@ export class PlayersResolver {
     @Args('createPlayerInput') createPlayerInput: CreatePlayerInput,
     @CurrentUser() userId: string,
   ) {
-    return this.playersService.create({ ...createPlayerInput, userId });
+    return this.playersService.create(createPlayerInput, userId);
   }
 
   @Mutation(() => Player)

@@ -12,6 +12,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { BggModule } from './bgg/bgg.module';
 import { AuthModule } from './auth/auth.module';
 import { ClerkAuthGuard } from './auth/clerk-auth.guard';
+import { AuthRequest, GqlContext } from './auth/types';
 
 @Module({
   imports: [
@@ -21,7 +22,9 @@ import { ClerkAuthGuard } from './auth/clerk-auth.guard';
       sortSchema: true,
       playground: true,
       introspection: true,
-      context: ({ req }: { req: Request }) => ({ req }),
+      context: ({ req }: { req: Request }): GqlContext => ({
+        req: req as AuthRequest,
+      }),
     }),
 
     GamesModule,

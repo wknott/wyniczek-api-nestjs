@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 import { Player } from './entities/player.entity';
 import { PlayerRecord } from './entities/player-record.entity';
+import { CreatePlayerInput } from './dto/create-player.input';
 import { Expansion } from '../games/entities/expansion.entity';
 import { Game } from '../games/entities/game.entity';
 
@@ -20,9 +21,9 @@ export class PlayersService {
     });
   }
 
-  async create(data: { name: string; userId: string }): Promise<Player> {
+  async create(input: CreatePlayerInput, userId: string): Promise<Player> {
     return this.prisma.player.create({
-      data,
+      data: { ...input, userId },
     });
   }
 
