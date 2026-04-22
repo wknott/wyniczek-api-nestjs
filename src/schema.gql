@@ -33,12 +33,10 @@ input CreateGameInput {
   inCollection: Boolean = true
   name: String!
   pointCategoryNames: [String!]
-  userId: String!
 }
 
 input CreatePlayerInput {
   name: String!
-  userId: String!
 }
 
 input CreatePointInput {
@@ -58,7 +56,6 @@ input CreateResultInput {
   images: [CreateResultImageInput!]
   playingTime: Int
   scores: [CreateScoreInput!]!
-  userId: String!
 }
 
 input CreateScoreInput {
@@ -240,5 +237,4 @@ input UpdateResultInput {
   images: [CreateResultImageInput!]
   playingTime: Int
   scores: [CreateScoreInput!]
-  userId: String
 }
