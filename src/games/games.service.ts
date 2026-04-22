@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { BggService } from '../bgg/bgg.service';
 
@@ -208,25 +209,32 @@ export class GamesService {
       }
     }
 
-    return this.prisma.game.create({
-      data: {
-        ...gameData,
-        ...additionalData,
-        userId,
-        pointCategories: {
-          create:
-            pointCategoryNames && pointCategoryNames.length > 0
-              ? pointCategoryNames.map((name, index) => ({
-                  name,
-                  order: index,
-                }))
-              : [{ name: 'Punkty', order: 0 }],
+    try {
+      return await this.prisma.game.create({
+        data: {
+          ...gameData,
+          ...additionalData,
+          userId,
+          pointCategories: {
+            create:
+              pointCategoryNames && pointCategoryNames.length > 0
+                ? pointCategoryNames.map((name, index) => ({
+                    name,
+                    order: index,
+                  }))
+                : [{ name: 'Punkty', order: 0 }],
+          },
         },
-      },
-      include: {
-        pointCategories: { orderBy: { order: 'asc' } },
-      },
-    });
+        include: {
+          pointCategories: { orderBy: { order: 'asc' } },
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('Ta gra już jest w twojej kolekcji');
+      }
+      throw error;
+    }
   }
 
   async syncGameWithBgg(gameId: string, userId: string): Promise<Game> {
