@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { BggService } from '../bgg/bgg.service';
@@ -34,19 +38,26 @@ export class GamesService {
     let items: Game[];
 
     switch (sortBy) {
-      case GameSortBy.POPULARITY:
-        items = await this.prisma.game.findMany({
+      case GameSortBy.POPULARITY: {
+        const gamesWithCount = await this.prisma.game.findMany({
           where: whereClause,
-          skip,
-          take,
           include: {
             pointCategories: { orderBy: { order: 'asc' } },
-          },
-          orderBy: {
-            results: { _count: 'desc' },
+            _count: { select: { results: { where: { userId } } } },
           },
         });
+
+        const sortedByPopularity = gamesWithCount.sort(
+          (a, b) => b._count.results - a._count.results,
+        );
+
+        items = sortedByPopularity.slice(skip, skip + take).map((game) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { _count, ...gameWithoutCount } = game;
+          return gameWithoutCount as Game;
+        });
         break;
+      }
 
       case GameSortBy.LAST_PLAYED: {
         const gamesWithLatestResult = await this.prisma.game.findMany({
@@ -155,6 +166,10 @@ export class GamesService {
     return times.length > 0 ? this.median(times) : null;
   }
 
+  async getResultsCount(gameId: string, userId: string): Promise<number> {
+    return this.prisma.result.count({ where: { gameId, userId } });
+  }
+
   async findLatestResult(gameId: string, userId: string) {
     return this.prisma.result.findFirst({
       where: { gameId, userId },
@@ -230,7 +245,10 @@ export class GamesService {
         },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new ConflictException('Ta gra już jest w twojej kolekcji');
       }
       throw error;

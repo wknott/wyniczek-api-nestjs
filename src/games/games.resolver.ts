@@ -67,6 +67,11 @@ export class GamesResolver {
     return this.gamesService.create(createGameInput, userId);
   }
 
+  @ResolveField(() => Int)
+  resultsCount(@Parent() game: Game, @CurrentUser() userId: string) {
+    return this.gamesService.getResultsCount(game.id, userId);
+  }
+
   @ResolveField(() => Int, { nullable: true })
   async avgPlayingTime2Players(
     @Parent() game: Game,

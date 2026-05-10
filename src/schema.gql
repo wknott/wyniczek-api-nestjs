@@ -93,6 +93,7 @@ type Game {
   playerStats: [GamePlayerStats!]!
   pointCategories: [PointCategory!]
   records: [GameRecord!]!
+  resultsCount: Int!
   thumbnailUrl: String
   userId: String!
 }

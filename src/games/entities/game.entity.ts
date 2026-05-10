@@ -70,6 +70,9 @@ export class Game {
 
   @Field(() => Int, { nullable: true })
   avgPlayingTime2Players?: number | null;
+
+  @Field(() => Int)
+  resultsCount?: number;
 }
 
 @ObjectType()
